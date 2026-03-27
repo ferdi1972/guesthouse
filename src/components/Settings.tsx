@@ -83,6 +83,16 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
       setPersonalTheme(userProfile.theme);
     }
   }, [userProfile?.theme]);
+
+  useEffect(() => {
+    if (settings) {
+      setFormData(prev => ({
+        ...prev,
+        ...settings
+      }));
+    }
+  }, [settings]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isExporting, setIsExporting] = useState(false);

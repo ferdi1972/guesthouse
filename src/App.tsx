@@ -86,24 +86,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-    
-    // Test connection
-    const testConnection = async () => {
-      try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('the client is offline')) {
-          console.error("Please check your Firebase configuration.");
-        }
-      }
-    };
-    testConnection();
-
-    // Listen to settings
+    // Listen to general settings (Public)
     const unsubSettings = onSnapshot(doc(db, 'settings', 'general'), (snapshot) => {
       if (snapshot.exists()) {
-        setSettings(snapshot.data() as SettingsType);
+        const generalData = snapshot.data();
+        setSettings(prev => ({ ...prev, ...generalData } as SettingsType));
       } else {
         // Initialize default settings if not exists
         const defaultSettings: SettingsType = {
@@ -119,6 +106,41 @@ export default function App() {
         setDoc(doc(db, 'settings', 'general'), defaultSettings);
       }
     });
+
+    // Listen to assets (Public)
+    const unsubLandingImage = onSnapshot(doc(db, 'settings', 'landing_image'), (snapshot) => {
+      if (snapshot.exists()) {
+        setSettings(prev => ({ ...prev, landingImage: snapshot.data().landingImage } as SettingsType));
+      }
+    });
+
+    const unsubSupportLogo = onSnapshot(doc(db, 'settings', 'support_logo'), (snapshot) => {
+      if (snapshot.exists()) {
+        setSettings(prev => ({ ...prev, supportLogo: snapshot.data().supportLogo } as SettingsType));
+      }
+    });
+
+    return () => {
+      unsubSettings();
+      unsubLandingImage();
+      unsubSupportLogo();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    
+    // Test connection
+    const testConnection = async () => {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration.");
+        }
+      }
+    };
+    testConnection();
 
     // Listen to user profile
     const unsubUser = onSnapshot(doc(db, 'users', user.uid), async (snapshot) => {
@@ -158,7 +180,6 @@ export default function App() {
     });
 
     return () => {
-      unsubSettings();
       unsubUser();
       unsubStaff();
     };
