@@ -186,3 +186,16 @@ export interface PasswordEntry {
   authorName?: string;
   createdAt: string;
 }
+
+export interface Contact {
+  id: string;
+  name: string;
+  organization?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  category: string;
+  notes?: string;
+  authorId: string;
+  createdAt: string;
+}

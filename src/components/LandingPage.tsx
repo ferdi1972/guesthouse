@@ -1,20 +1,38 @@
 import React from 'react';
-import { Hotel, ArrowRight, Bed, Users, CalendarDays, ShieldCheck, MapPin, Phone, Mail, ChevronRight } from 'lucide-react';
+import { Hotel, ArrowRight, Bed, Users, CalendarDays, ShieldCheck, MapPin, Phone, Mail, ChevronRight, X } from 'lucide-react';
 import { Settings } from '../types';
+import Auth from './Auth';
 
 interface LandingPageProps {
   settings: Settings | null;
   onSignIn: () => void;
+  showAuth?: boolean;
+  onCloseAuth?: () => void;
 }
 
-export default function LandingPage({ settings, onSignIn }: LandingPageProps) {
+export default function LandingPage({ settings, onSignIn, showAuth, onCloseAuth }: LandingPageProps) {
   const title = settings?.landingTitle || settings?.companyName || 'Stay@Edison';
   const description = settings?.landingDescription || 'Experience comfort and luxury in the heart of the city. Your perfect getaway starts here.';
   const buttonText = settings?.landingButtonText || 'Sign In to Manager';
   const bgImage = settings?.landingImage || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=1920';
 
   return (
-    <div className="min-h-screen bg-[#f5f2ed] text-[#1a1a1a] font-sans selection:bg-[#5A5A40] selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#f5f2ed] text-[#1a1a1a] font-sans selection:bg-[#5A5A40] selection:text-white overflow-x-hidden relative">
+      {/* Auth Modal */}
+      {showAuth && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md">
+            <button 
+              onClick={onCloseAuth}
+              className="absolute -top-12 right-0 p-2 text-white/60 hover:text-white transition-colors"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <Auth onBack={onCloseAuth} />
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-[#f5f2ed]/80 backdrop-blur-md border-b border-[#1a1a1a]/10">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">

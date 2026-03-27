@@ -22,7 +22,8 @@ import {
   StickyNote,
   Key,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Contact
 } from 'lucide-react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
@@ -48,6 +49,7 @@ import ReceiptsList from './components/ReceiptsList';
 import Inventory from './components/Inventory';
 import Schedule from './components/Schedule';
 import Diary from './components/Diary';
+import Contacts from './components/Contacts';
 import StickyNotes from './components/StickyNotes';
 import PasswordSafe from './components/PasswordSafe';
 import BackupChecker from './components/BackupChecker';
@@ -60,6 +62,7 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [settingsLoading, setSettingsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -105,6 +108,7 @@ export default function App() {
         };
         setDoc(doc(db, 'settings', 'general'), defaultSettings);
       }
+      setSettingsLoading(false);
     });
 
     // Listen to assets (Public)
@@ -214,7 +218,7 @@ export default function App() {
     body.classList.add(themeClass);
   }, [userProfile?.theme, settings?.theme]);
 
-  if (loading) {
+  if (loading || settingsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-stone-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-900"></div>
@@ -223,10 +227,14 @@ export default function App() {
   }
 
   if (!user) {
-    if (showAuth) {
-      return <Auth onBack={() => setShowAuth(false)} />;
-    }
-    return <LandingPage settings={settings} onSignIn={() => setShowAuth(true)} />;
+    return (
+      <LandingPage 
+        settings={settings} 
+        onSignIn={() => setShowAuth(true)} 
+        showAuth={showAuth}
+        onCloseAuth={() => setShowAuth(false)}
+      />
+    );
   }
 
   const navSections = userProfile?.role === 'landlord' ? [
@@ -288,6 +296,7 @@ export default function App() {
         { id: 'staff', label: 'Staff', icon: Users },
         { id: 'cashbook', label: 'Cashbook', icon: Wallet },
         { id: 'diary', label: 'Diary', icon: Book },
+        { id: 'contacts', label: 'Contacts', icon: Contact },
         { id: 'password-safe', label: 'Password Safe', icon: Key },
         { id: 'sticky-notes', label: 'Sticky Notes', icon: StickyNote },
         { id: 'settings', label: 'Settings', icon: SettingsIcon },
@@ -457,6 +466,7 @@ export default function App() {
                 <>
                   {activeTab === 'cashbook' && <Cashbook settings={settings} userProfile={userProfile} />}
                   {activeTab === 'diary' && <Diary settings={settings} userProfile={userProfile} />}
+                  {activeTab === 'contacts' && <Contacts />}
                   {activeTab === 'password-safe' && <PasswordSafe settings={settings} userProfile={userProfile} />}
                   {activeTab === 'sticky-notes' && <StickyNotes userProfile={userProfile} />}
                   {activeTab === 'staff' && <StaffPage settings={settings} userProfile={userProfile} />}

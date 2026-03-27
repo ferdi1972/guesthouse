@@ -35,7 +35,6 @@ service cloud.firestore {
              data.displayName is string &&
              data.role in ['admin', 'manager', 'staff', 'user', 'landlord'] &&
              (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1048576)) &&
-             (!('githubUrl' in data) || (data.githubUrl is string && data.githubUrl.size() < 500)) &&
              (!('theme' in data) || data.theme is string);
     }
 
@@ -184,6 +183,19 @@ service cloud.firestore {
              data.createdAt is string;
     }
 
+    function isValidContact(data) {
+      return data.keys().hasAll(['name', 'category', 'authorId', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.category is string && data.category.size() > 0 &&
+             data.authorId is string &&
+             (!('organization' in data) || data.organization is string) &&
+             (!('email' in data) || (data.email is string && data.email.size() > 5)) &&
+             (!('phone' in data) || data.phone is string) &&
+             (!('address' in data) || data.address is string) &&
+             (!('notes' in data) || data.notes is string) &&
+             data.createdAt is string;
+    }
+
     // Match rules
     match /guests/{guestId} {
       allow read: if isAuthenticated();
@@ -263,6 +275,12 @@ service cloud.firestore {
     match /budgets/{budgetId} {
       allow read: if isAuthenticated();
       allow create, update: if isAdmin() && isValidBudget(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /contacts/{contactId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isStaff() && isValidContact(request.resource.data);
       allow delete: if isAdmin();
     }
     

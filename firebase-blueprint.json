@@ -257,6 +257,24 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "username", "password", "authorId", "createdAt"]
+    },
+    "Contact": {
+      "title": "Contact",
+      "description": "A business contact or supplier.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "organization": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "category": { "type": "string" },
+        "notes": { "type": "string" },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "category", "authorId", "createdAt"]
     }
   },
   "firestore": {
@@ -275,6 +293,7 @@
     "budgets": { "schema": "Budget", "description": "Financial budgets" },
     "diary": { "schema": "DiaryEntry", "description": "Admin diary entries" },
     "stickyNotes": { "schema": "StickyNote", "description": "Quick admin sticky notes" },
-    "passwordSafe": { "schema": "PasswordEntry", "description": "Secure password storage for admins" }
+    "passwordSafe": { "schema": "PasswordEntry", "description": "Secure password storage for admins" },
+    "contacts": { "schema": "Contact", "description": "Business contacts and suppliers" }
   }
 }
