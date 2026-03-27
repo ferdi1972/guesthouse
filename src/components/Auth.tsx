@@ -6,11 +6,10 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   signInWithPopup,
-  GoogleAuthProvider,
-  GithubAuthProvider
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { doc, setDoc, getDocs, collection, query, limit, getDoc } from 'firebase/firestore';
-import { Hotel, Mail, Lock, User, ArrowRight, Loader2, KeyRound, Chrome, ArrowLeft, Github } from 'lucide-react';
+import { Hotel, Mail, Lock, User, ArrowRight, Loader2, KeyRound, Chrome, ArrowLeft } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface AuthProps {
@@ -70,51 +69,34 @@ export default function Auth({ onBack }: AuthProps) {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await handleSocialSignIn(result.user);
+      const user = result.user;
+
+      // Check if profile exists
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        // Check if this is the first user
+        const usersSnap = await getDocs(query(collection(db, 'users'), limit(1)));
+        const isFirstUser = usersSnap.empty;
+        const isBootstrapAdmin = user.email && ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"].includes(user.email);
+
+        const newProfile: UserProfile = {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || user.email?.split('@')[0] || 'Guest',
+          role: (isFirstUser || isBootstrapAdmin) ? 'admin' : 'user',
+          theme: 'luxury',
+          createdAt: new Date().toISOString()
+        };
+
+        await setDoc(docRef, newProfile);
+      }
     } catch (err: any) {
       console.error('Google Auth error:', err);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGithubSignIn = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const provider = new GithubAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      await handleSocialSignIn(result.user);
-    } catch (err: any) {
-      console.error('Github Auth error:', err);
-      setError(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSocialSignIn = async (user: any) => {
-    // Check if profile exists
-    const docRef = doc(db, 'users', user.uid);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-      // Check if this is the first user
-      const usersSnap = await getDocs(query(collection(db, 'users'), limit(1)));
-      const isFirstUser = usersSnap.empty;
-      const isBootstrapAdmin = user.email && ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"].includes(user.email);
-
-      const newProfile: UserProfile = {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName || user.email?.split('@')[0] || 'Guest',
-        role: (isFirstUser || isBootstrapAdmin) ? 'admin' : 'user',
-        theme: 'black-white',
-        createdAt: new Date().toISOString()
-      };
-
-      await setDoc(docRef, newProfile);
     }
   };
 
@@ -151,7 +133,7 @@ export default function Auth({ onBack }: AuthProps) {
           email: user.email || '',
           displayName: displayName || 'Guest',
           role: (isFirstUser || isBootstrapAdmin) ? 'admin' : 'user', 
-          theme: 'black-white',
+          theme: 'luxury',
           createdAt: new Date().toISOString()
         };
 
@@ -166,9 +148,9 @@ export default function Auth({ onBack }: AuthProps) {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-stone-200 animate-in fade-in zoom-in-95 duration-500">
-        <div className="p-8 text-center bg-stone-900 text-white relative">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-border animate-in fade-in zoom-in-95 duration-500">
+        <div className="p-8 text-center bg-sidebar text-sidebar-foreground relative">
           {onBack && (
             <button 
               onClick={onBack}
@@ -213,7 +195,7 @@ export default function Auth({ onBack }: AuthProps) {
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-stone-50/50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
                   placeholder="John Doe"
                 />
               </div>
@@ -229,7 +211,7 @@ export default function Auth({ onBack }: AuthProps) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-stone-50/50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
                 placeholder="john@example.com"
               />
             </div>
@@ -260,7 +242,7 @@ export default function Auth({ onBack }: AuthProps) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-stone-50/50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -270,7 +252,7 @@ export default function Auth({ onBack }: AuthProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-stone-900 text-white py-4 rounded-xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10 flex items-center justify-center gap-2 group"
+            className="w-full bg-primary text-primary-foreground py-4 rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/10 flex items-center justify-center gap-2 group"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -293,26 +275,15 @@ export default function Auth({ onBack }: AuthProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={loading}
-                  className="bg-white text-stone-900 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-50 transition-all flex items-center justify-center gap-2 group"
-                >
-                  <Chrome className="w-4 h-4 text-stone-600 group-hover:scale-110 transition-transform" />
-                  Google
-                </button>
-                <button
-                  type="button"
-                  onClick={handleGithubSignIn}
-                  disabled={loading}
-                  className="bg-white text-stone-900 py-3 rounded-xl font-bold border border-stone-200 hover:bg-stone-50 transition-all flex items-center justify-center gap-2 group"
-                >
-                  <Github className="w-4 h-4 text-stone-900 group-hover:scale-110 transition-transform" />
-                  GitHub
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="w-full bg-white text-stone-900 py-4 rounded-xl font-bold border border-stone-200 hover:bg-stone-50 transition-all flex items-center justify-center gap-3 group"
+              >
+                <Chrome className="w-5 h-5 text-stone-600 group-hover:scale-110 transition-transform" />
+                Sign in with Google
+              </button>
             </>
           )}
 

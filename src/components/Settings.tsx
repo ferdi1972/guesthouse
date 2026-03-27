@@ -40,7 +40,8 @@ const COUNTRIES = [
 ];
 
 const THEMES: { id: AppTheme; label: string }[] = [
-  { id: 'black-white', label: 'Black and White' },
+  { id: 'luxury', label: 'Luxury' },
+  { id: 'black-white', label: 'Classic Luxury' },
   { id: 'bright-orange', label: 'Bright Orange' },
   { id: 'bright-green', label: 'Bright Green' },
   { id: 'rosewood', label: 'Rosewood' },
@@ -61,7 +62,7 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
     country: settings?.country || 'South Africa',
     currency: settings?.currency || 'R',
     taxRate: settings?.taxRate || 0,
-    theme: settings?.theme || 'black-white',
+    theme: settings?.theme || 'luxury',
     backupFrequency: settings?.backupFrequency || 'none',
     backupTime: settings?.backupTime || '00:00',
     lastBackupDate: settings?.lastBackupDate || '',
@@ -75,7 +76,7 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
     landingImage: settings?.landingImage || '',
     landingButtonText: settings?.landingButtonText || ''
   });
-  const [personalTheme, setPersonalTheme] = useState<AppTheme>(userProfile?.theme || settings?.theme || 'black-white');
+  const [personalTheme, setPersonalTheme] = useState<AppTheme>(userProfile?.theme || settings?.theme || 'luxury');
 
   useEffect(() => {
     if (userProfile?.theme) {
@@ -398,10 +399,10 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                     type="button"
                     onClick={handleBackup}
                     disabled={isBackingUp || isRestoring}
-                    className="w-full bg-stone-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-stone-800 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+                    className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
                   >
                     {isBackingUp ? (
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     ) : (
                       <Download className="w-4 h-4" />
                     )}
@@ -553,10 +554,10 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                 <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <AlertTriangle className="w-10 h-10 text-rose-600" />
                 </div>
-                <h2 className="text-2xl font-serif italic text-stone-900 mb-2">Factory Reset?</h2>
-                <p className="text-stone-500 mb-8">
+                <h2 className="text-2xl font-serif italic text-primary mb-2">Factory Reset?</h2>
+                <p className="text-muted-foreground mb-8">
                   This is a <strong>hard reset</strong>. It will permanently delete ALL bookings, guests, rooms, financial records, settings, and <strong>all user profiles</strong>.
-                  <span className="block mt-2 font-bold text-rose-600 uppercase text-xs tracking-widest">This action is irreversible and you will be logged out.</span>
+                  <span className="block mt-2 font-bold text-destructive uppercase text-xs tracking-widest">This action is irreversible and you will be logged out.</span>
                 </p>
                 <div className="flex flex-col gap-3">
                   <button
@@ -592,8 +593,8 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                 <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <AlertTriangle className="w-10 h-10 text-amber-600" />
                 </div>
-                <h2 className="text-2xl font-serif italic text-stone-900 mb-2">Restore Data?</h2>
-                <p className="text-stone-500 mb-8">
+                <h2 className="text-2xl font-serif italic text-primary mb-2">Restore Data?</h2>
+                <p className="text-muted-foreground mb-8">
                   WARNING: Restoring data will overwrite existing records with the same IDs. This action cannot be undone.
                 </p>
                 <div className="flex flex-col gap-3">
@@ -602,7 +603,7 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                       if (pendingRestoreFile) handleRestore(pendingRestoreFile);
                       setShowRestoreConfirm(false);
                     }}
-                    className="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-stone-800 transition-all flex items-center justify-center gap-2 shadow-lg"
+                    className="w-full bg-primary text-primary-foreground py-4 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg"
                   >
                     <Upload className="w-5 h-5" />
                     Yes, Restore Data
@@ -612,7 +613,7 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                       setShowRestoreConfirm(false);
                       setPendingRestoreFile(null);
                     }}
-                    className="w-full bg-stone-100 text-stone-600 py-4 rounded-2xl font-bold hover:bg-stone-200 transition-all"
+                    className="w-full bg-accent text-accent-foreground py-4 rounded-2xl font-bold hover:bg-accent/80 transition-all"
                   >
                     Cancel
                   </button>
@@ -739,7 +740,7 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                 <div className="md:col-span-2 space-y-4">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Hero Background Image</label>
                   <div className="flex items-start gap-6">
-                    <div className="w-48 h-32 rounded-2xl bg-stone-100 border border-stone-200 overflow-hidden shrink-0 relative group">
+                    <div className="w-48 h-32 rounded-2xl bg-accent/30 border border-border overflow-hidden shrink-0 relative group">
                       {formData.landingImage ? (
                         <img 
                           src={formData.landingImage} 
@@ -748,7 +749,7 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                           referrerPolicy="no-referrer"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-stone-400">
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                           <Globe className="w-8 h-8 opacity-20" />
                         </div>
                       )}
@@ -763,13 +764,13 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                       </label>
                     </div>
                     <div className="flex-1 space-y-2">
-                      <p className="text-sm text-stone-600">Upload a high-quality image for your landing page background.</p>
-                      <p className="text-[10px] text-stone-400 uppercase tracking-widest">Recommended: 1920x1080px, Max 2MB</p>
+                      <p className="text-sm text-muted-foreground">Upload a high-quality image for your landing page background.</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Recommended: 1920x1080px, Max 2MB</p>
                       {formData.landingImage && (
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, landingImage: '' })}
-                          className="text-xs font-bold text-rose-600 hover:text-rose-700 uppercase tracking-widest"
+                          className="text-xs font-bold text-destructive hover:text-destructive/80 uppercase tracking-widest"
                         >
                           Remove Image
                         </button>

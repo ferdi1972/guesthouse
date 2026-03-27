@@ -68,7 +68,6 @@ export interface UserProfile {
   email: string;
   displayName: string;
   photoURL?: string;
-  githubUrl?: string;
   role: 'admin' | 'manager' | 'staff' | 'user' | 'landlord';
   theme?: AppTheme;
   createdAt: string;
@@ -85,7 +84,7 @@ export interface Staff {
   createdAt: string;
 }
 
-export type AppTheme = 'black-white' | 'bright-orange' | 'bright-green' | 'rosewood' | 'light-blue';
+export type AppTheme = 'luxury' | 'black-white' | 'bright-orange' | 'bright-green' | 'rosewood' | 'light-blue';
 export type BackupFrequency = 'none' | 'daily' | 'weekly' | 'monthly';
 
 export interface Settings {

@@ -114,7 +114,7 @@ export default function App() {
           country: 'South Africa',
           currency: 'R',
           taxRate: 0,
-          theme: 'black-white'
+          theme: 'luxury'
         };
         setDoc(doc(db, 'settings', 'general'), defaultSettings);
       }
@@ -139,7 +139,7 @@ export default function App() {
           email: user.email || '',
           displayName: user.displayName || user.email?.split('@')[0] || 'User',
           role: user.email === 'ferditviljoen@gmail.com' ? 'admin' : 'user',
-          theme: 'black-white',
+          theme: 'luxury',
           createdAt: new Date().toISOString()
         };
         try {
@@ -181,7 +181,7 @@ export default function App() {
   const handleLogout = () => signOut(auth);
 
   useEffect(() => {
-    const theme = userProfile?.theme || settings?.theme || 'black-white';
+    const theme = userProfile?.theme || settings?.theme || 'luxury';
     const themeClass = `theme-${theme}`;
     
     // Remove any existing theme classes

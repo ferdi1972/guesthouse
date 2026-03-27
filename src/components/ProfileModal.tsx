@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Camera, User, Mail, Shield, Save, Loader2, Github } from 'lucide-react';
+import { X, Camera, User, Mail, Shield, Save, Loader2 } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { UserProfile, AppTheme } from '../types';
@@ -16,7 +16,6 @@ interface ProfileModalProps {
 export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileModalProps) {
   const [displayName, setDisplayName] = useState(userProfile.displayName);
   const [photoURL, setPhotoURL] = useState(userProfile.photoURL || '');
-  const [githubUrl, setGithubUrl] = useState(userProfile.githubUrl || '');
   const [theme, setTheme] = useState<AppTheme>(userProfile.theme || 'black-white');
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,7 +25,6 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
     if (isOpen) {
       setDisplayName(userProfile.displayName);
       setPhotoURL(userProfile.photoURL || '');
-      setGithubUrl(userProfile.githubUrl || '');
       setTheme(userProfile.theme || 'black-white');
     }
   }, [isOpen, userProfile]);
@@ -55,7 +53,6 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
       await updateDoc(doc(db, 'users', userProfile.uid), {
         displayName,
         photoURL,
-        githubUrl,
         theme
       });
       onClose();
@@ -67,6 +64,7 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
   };
 
   const themes: { id: AppTheme; label: string; color: string }[] = [
+    { id: 'luxury', label: 'Luxury', color: 'bg-[#5A5A40]' },
     { id: 'black-white', label: 'Classic', color: 'bg-stone-900' },
     { id: 'bright-orange', label: 'Sunset', color: 'bg-orange-500' },
     { id: 'bright-green', label: 'Forest', color: 'bg-emerald-500' },
@@ -77,18 +75,18 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            className="bg-background w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-border"
           >
-            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50 flex-shrink-0">
-              <h3 className="font-serif italic text-2xl text-stone-900">Edit Profile</h3>
+            <div className="p-6 border-b border-border flex items-center justify-between bg-accent/30 flex-shrink-0">
+              <h3 className="font-serif italic text-2xl text-primary">Edit Profile</h3>
               <button 
                 onClick={onClose}
-                className="p-2 text-stone-400 hover:text-stone-900 rounded-full hover:bg-stone-100 transition-all"
+                className="p-2 text-muted-foreground hover:text-primary rounded-full hover:bg-accent transition-all"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -98,7 +96,7 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
               {/* Profile Picture */}
               <div className="flex flex-col items-center gap-4">
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-stone-100 border-4 border-white shadow-xl flex items-center justify-center">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-accent/20 border-4 border-background shadow-xl flex items-center justify-center">
                     {photoURL ? (
                       <img 
                         src={photoURL} 
@@ -107,13 +105,13 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <User className="w-16 h-16 text-stone-300" />
+                      <User className="w-16 h-16 text-muted-foreground/30" />
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-0 right-0 p-2.5 bg-stone-900 text-white rounded-full shadow-lg hover:bg-stone-800 transition-all transform group-hover:scale-110"
+                    className="absolute bottom-0 right-0 p-2.5 bg-primary text-primary-foreground rounded-full shadow-lg hover:opacity-90 transition-all transform group-hover:scale-110"
                   >
                     <Camera className="w-5 h-5" />
                   </button>
@@ -145,23 +143,6 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
                       onChange={(e) => setDisplayName(e.target.value)}
                       className="w-full pl-12 pr-4 py-3.5 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-stone-900/5 focus:border-stone-900 transition-all outline-none text-stone-900 font-medium"
                       placeholder="Your Name"
-                    />
-                  </div>
-                </div>
-
-                {/* GitHub URL */}
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">
-                    GitHub Profile URL
-                  </label>
-                  <div className="relative">
-                    <Github className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
-                    <input
-                      type="url"
-                      value={githubUrl}
-                      onChange={(e) => setGithubUrl(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3.5 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-stone-900/5 focus:border-stone-900 transition-all outline-none text-stone-900 font-medium"
-                      placeholder="https://github.com/username"
                     />
                   </div>
                 </div>
@@ -228,7 +209,7 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold hover:bg-stone-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-stone-900/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-primary text-primary-foreground py-4 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-xl shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

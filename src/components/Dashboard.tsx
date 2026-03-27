@@ -97,7 +97,7 @@ export default function Dashboard({ settings }: DashboardProps) {
       {/* Welcome Section */}
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-serif italic text-stone-900 mb-2">Welcome back,</h1>
+          <h1 className="text-4xl font-serif italic text-primary mb-2">Welcome back,</h1>
           <p className="text-stone-500 font-medium uppercase tracking-widest text-xs">
             Overview of {settings?.companyName || 'your guesthouse'}
           </p>
@@ -206,13 +206,13 @@ export default function Dashboard({ settings }: DashboardProps) {
 
         {/* Quick Actions / Status */}
         <div className="space-y-6">
-          <div className="bg-stone-900 text-white p-8 rounded-2xl shadow-xl relative overflow-hidden group">
+          <div className="bg-accent text-accent-foreground p-8 rounded-2xl shadow-xl relative overflow-hidden group">
             <div className="relative z-10">
               <h3 className="font-serif italic text-2xl mb-2">Need help?</h3>
-              <p className="text-stone-400 text-sm mb-6 leading-relaxed">Check our documentation or contact support for advanced guesthouse management tips.</p>
+              <p className="opacity-80 text-sm mb-6 leading-relaxed">Check our documentation or contact support for advanced guesthouse management tips.</p>
               <button 
                 onClick={() => window.open('https://wa.me/27815472274', '_blank')}
-                className="bg-white text-stone-900 px-6 py-2 rounded-full text-sm font-bold hover:bg-stone-100 transition-colors"
+                className="bg-primary-foreground text-primary px-6 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-colors"
               >
                 Get Support
               </button>
@@ -230,7 +230,7 @@ export default function Dashboard({ settings }: DashboardProps) {
             </div>
             <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
               <div 
-                className="bg-stone-900 h-full transition-all duration-1000" 
+                className="bg-accent h-full transition-all duration-1000" 
                 style={{ width: `${stats.availableRooms > 0 ? (stats.activeBookings / (stats.availableRooms + stats.activeBookings)) * 100 : 0}%` }}
               />
             </div>
