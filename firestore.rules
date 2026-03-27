@@ -1,0 +1,276 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email in ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"] ||
+        request.auth.uid in ["MJSsqJjxKTVcBYHP4bGx1F6Vh1w2", "Bmx9gwiexiSI5uaJ0d7qP2SHM0O2"] ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isStaff() {
+      return isAuthenticated() && (
+        isAdmin() || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'manager', 'staff', 'user', 'landlord'])
+      );
+    }
+
+    // Validation functions
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role']) &&
+             data.uid == request.auth.uid &&
+             data.email is string &&
+             data.displayName is string &&
+             data.role in ['admin', 'manager', 'staff', 'user', 'landlord'] &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1048576)) &&
+             (!('githubUrl' in data) || (data.githubUrl is string && data.githubUrl.size() < 500)) &&
+             (!('theme' in data) || data.theme is string);
+    }
+
+    function isValidGuest(data) {
+      return data.keys().hasAll(['name', 'email']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && data.email.size() > 5 &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 20)) &&
+             (!('idNumber' in data) || (data.idNumber is string && data.idNumber.size() < 30)) &&
+             (!('vehicleRegistration' in data) || (data.vehicleRegistration is string && data.vehicleRegistration.size() < 20)) &&
+             (!('address' in data) || (data.address is string && data.address.size() < 200)) &&
+             (!('createdAt' in data) || data.createdAt is string);
+    }
+
+    function isValidRoom(data) {
+      return data.keys().hasAll(['number', 'singleRate', 'doubleRate', 'hourlyRate']) &&
+             data.number is string && data.number.size() > 0 &&
+             data.singleRate is number && data.singleRate >= 0 &&
+             data.doubleRate is number && data.doubleRate >= 0 &&
+             data.hourlyRate is number && data.hourlyRate >= 0 &&
+             (!('status' in data) || data.status in ['Available', 'Occupied', 'Cleaning', 'Maintenance']) &&
+             (!('maintenanceNotes' in data) || data.maintenanceNotes is string);
+    }
+
+    function isValidBooking(data) {
+      return data.keys().hasAll(['guestId', 'roomId', 'rateType', 'totalAmount']) &&
+             data.guestId is string &&
+             data.roomId is string &&
+             data.rateType in ['Single', 'Double', 'Hourly'] &&
+             data.totalAmount is number &&
+             (!('paidAmount' in data) || data.paidAmount is number) &&
+             (!('isPaid' in data) || data.isPaid is bool) &&
+             (!('status' in data) || data.status in ['Confirmed', 'CheckedIn', 'CheckedOut', 'Cancelled']) &&
+             (!('checkIn' in data) || data.checkIn is string) &&
+             (!('checkOut' in data) || data.checkOut is string) &&
+             (!('createdAt' in data) || data.createdAt is string);
+    }
+
+    function isBookingOperationalUpdate() {
+      // Allow staff to update status and payment info, but not core booking details
+      let affected = request.resource.data.diff(resource.data).affectedKeys();
+      let operationalKeys = ['status', 'paidAmount', 'isPaid', 'lastPaymentMethod'];
+      return affected.hasOnly(operationalKeys);
+    }
+
+    function isRoomStatusUpdate() {
+      // Allow staff to update room status (e.g. to 'Cleaning' or 'Available')
+      let affected = request.resource.data.diff(resource.data).affectedKeys();
+      return affected.hasOnly(['status']);
+    }
+
+    function isValidCashbookEntry(data) {
+      return data.keys().hasAll(['date', 'description', 'amount', 'type']) &&
+             data.description is string && data.description.size() > 0 &&
+             data.amount is number && data.amount >= 0 &&
+             data.type in ['Income', 'Expense', 'Refund'] &&
+             (!('category' in data) || data.category is string) &&
+             (!('bookingId' in data) || data.bookingId is string);
+    }
+
+    function isValidSettings(settingId, data) {
+      return (settingId == 'general' && data.keys().hasAll(['companyName']) && data.companyName is string) ||
+             (settingId == 'landing_image' && data.keys().hasAll(['landingImage'])) ||
+             (settingId == 'support_logo' && data.keys().hasAll(['supportLogo']));
+    }
+
+    function isValidStaff(data) {
+      return data.keys().hasAll(['name', 'role', 'commissionPercentage', 'lastPayoutDate']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.role is string && data.role.size() > 0 && data.role.size() < 50 &&
+             data.commissionPercentage is number && data.commissionPercentage >= 0 && data.commissionPercentage <= 100 &&
+             data.lastPayoutDate is string &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1048576)) &&
+             (!('createdAt' in data) || data.createdAt is string);
+    }
+
+    function isValidReceipt(data) {
+      return data.keys().hasAll(['receiptNumber', 'bookingId', 'guestId', 'guestName', 'amount', 'date']) &&
+             data.receiptNumber is string &&
+             data.bookingId is string &&
+             data.guestId is string &&
+             data.guestName is string &&
+             data.amount is number && data.amount >= 0 &&
+             data.date is string &&
+             (!('paymentMethod' in data) || data.paymentMethod is string) &&
+             (!('notes' in data) || data.notes is string) &&
+             (!('items' in data) || data.items is list) &&
+             (!('createdAt' in data) || data.createdAt is string);
+    }
+
+    function isValidRoomInventoryItem(data) {
+      return data.keys().hasAll(['roomId', 'name', 'quantity', 'lastUpdated']) &&
+             data.roomId is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.quantity is number && data.quantity >= 0 &&
+             data.lastUpdated is string;
+    }
+
+    function isValidElectricityReading(data) {
+      return data.keys().hasAll(['date', 'startReading', 'endReading', 'unitsUsed', 'dailyRevenue']) &&
+             data.date is string &&
+             data.startReading is number && data.startReading >= 0 &&
+             data.endReading is number && data.endReading >= data.startReading &&
+             data.unitsUsed is number && data.unitsUsed == data.endReading - data.startReading &&
+             data.dailyRevenue is number && data.dailyRevenue >= 0 &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() < 1000)) &&
+             (!('createdAt' in data) || data.createdAt is string);
+    }
+
+    function isValidBudget(data) {
+      return data.keys().hasAll(['month', 'year', 'category', 'amount', 'createdAt']) &&
+             data.month is number && data.month >= 0 && data.month <= 11 &&
+             data.year is number && data.year >= 2000 &&
+             data.category is string && data.category.size() > 0 &&
+             data.amount is number && data.amount >= 0 &&
+             data.createdAt is string;
+    }
+
+    function isValidDiaryEntry(data) {
+      return data.keys().hasAll(['date', 'title', 'content', 'authorId', 'createdAt']) &&
+             data.date is string &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 10000 &&
+             data.authorId is string &&
+             (!('authorName' in data) || data.authorName is string) &&
+             data.createdAt is string;
+    }
+
+    function isValidStickyNote(data) {
+      return data.keys().hasAll(['content', 'color', 'authorId', 'createdAt']) &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 1000 &&
+             data.color is string &&
+             data.authorId is string &&
+             (!('position' in data) || (data.position is map && data.position.x is number && data.position.y is number)) &&
+             data.createdAt is string;
+    }
+
+    function isValidPasswordEntry(data) {
+      return data.keys().hasAll(['title', 'username', 'password', 'authorId', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.username is string && data.username.size() > 0 &&
+             data.password is string && data.password.size() > 0 &&
+             data.authorId is string &&
+             (!('url' in data) || data.url is string) &&
+             (!('notes' in data) || data.notes is string) &&
+             data.createdAt is string;
+    }
+
+    // Match rules
+    match /guests/{guestId} {
+      allow read: if isAuthenticated();
+      allow create: if isStaff() && isValidGuest(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /rooms/{roomId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidRoom(request.resource.data);
+      allow update: if isAdmin() || (isStaff() && isRoomStatusUpdate());
+      allow delete: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated();
+      allow create: if isStaff() && isValidBooking(request.resource.data);
+      allow update: if isAdmin() || (isStaff() && isBookingOperationalUpdate());
+      allow delete: if isAdmin();
+    }
+
+    match /cashbook/{entryId} {
+      allow read: if isAuthenticated();
+      allow create: if isStaff() && isValidCashbookEntry(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /diary/{entryId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && isValidDiaryEntry(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /stickyNotes/{noteId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && isValidStickyNote(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /passwordSafe/{entryId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && isValidPasswordEntry(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidSettings(settingId, request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /staff/{staffId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidStaff(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /receipts/{receiptId} {
+      allow read: if isAuthenticated();
+      allow create: if isStaff() && isValidReceipt(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /roomInventory/{itemId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidRoomInventoryItem(request.resource.data);
+      allow update: if isAdmin() && isValidRoomInventoryItem(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /electricity/{readingId} {
+      allow read: if isAuthenticated();
+      allow create: if isStaff() && isValidElectricityReading(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /budgets/{budgetId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidBudget(request.resource.data);
+      allow delete: if isAdmin();
+    }
+    
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAdmin() || (isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin() || (isAuthenticated() && (request.auth.token.email in ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"] || request.auth.uid == "MJSsqJjxKTVcBYHP4bGx1F6Vh1w2"));
+    }
+  }
+}

@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-sidebar: var(--sidebar-bg);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+}
+
+@layer base {
+  :root {
+    --primary: #1c1917; /* stone-900 */
+    --primary-foreground: #ffffff;
+    --accent: #f5f5f4; /* stone-100 */
+    --accent-foreground: #1c1917;
+    --muted: #f5f5f4;
+    --muted-foreground: #78716c; /* stone-500 */
+    --border: #e7e5e4; /* stone-200 */
+    --background: #fafaf9; /* stone-50 */
+    --sidebar-bg: #1c1917;
+    --sidebar-foreground: #ffffff;
+  }
+
+  .theme-black-white {
+    --primary: #000000;
+    --primary-foreground: #ffffff;
+    --accent: #f5f5f5;
+    --accent-foreground: #000000;
+    --muted: #f5f5f5;
+    --muted-foreground: #666666;
+    --border: #000000;
+    --background: #ffffff;
+    --sidebar-bg: #000000;
+    --sidebar-foreground: #ffffff;
+
+    --color-stone-50: #ffffff;
+    --color-stone-100: #f5f5f5;
+    --color-stone-200: #000000;
+    --color-stone-300: #000000;
+    --color-stone-400: #666666;
+    --color-stone-500: #666666;
+    --color-stone-600: #000000;
+    --color-stone-700: #000000;
+    --color-stone-800: #000000;
+    --color-stone-900: #000000;
+  }
+
+  .theme-bright-orange {
+    --primary: #ea580c;
+    --primary-foreground: #ffffff;
+    --accent: #fff7ed;
+    --accent-foreground: #9a3412;
+    --muted: #fff7ed;
+    --muted-foreground: #c2410c;
+    --border: #ffedd5;
+    --background: #fffaf5;
+    --sidebar-bg: #7c2d12;
+    --sidebar-foreground: #ffffff;
+
+    --color-stone-50: #fff7ed;
+    --color-stone-100: #ffedd5;
+    --color-stone-200: #fed7aa;
+    --color-stone-300: #fdba74;
+    --color-stone-400: #fb923c;
+    --color-stone-500: #f97316;
+    --color-stone-600: #ea580c;
+    --color-stone-700: #c2410c;
+    --color-stone-800: #9a3412;
+    --color-stone-900: #7c2d12;
+  }
+
+  .theme-bright-green {
+    --primary: #059669;
+    --primary-foreground: #ffffff;
+    --accent: #ecfdf5;
+    --accent-foreground: #064e3b;
+    --muted: #ecfdf5;
+    --muted-foreground: #047857;
+    --border: #d1fae5;
+    --background: #f0fdf4;
+    --sidebar-bg: #064e3b;
+    --sidebar-foreground: #ffffff;
+
+    --color-stone-50: #ecfdf5;
+    --color-stone-100: #d1fae5;
+    --color-stone-200: #a7f3d0;
+    --color-stone-300: #6ee7b7;
+    --color-stone-400: #34d399;
+    --color-stone-500: #10b981;
+    --color-stone-600: #059669;
+    --color-stone-700: #047857;
+    --color-stone-800: #065f46;
+    --color-stone-900: #064e3b;
+  }
+
+  .theme-rosewood {
+    --primary: #9f1239;
+    --primary-foreground: #ffffff;
+    --accent: #fff1f2;
+    --accent-foreground: #4c0519;
+    --muted: #fff1f2;
+    --muted-foreground: #be123c;
+    --border: #ffe4e6;
+    --background: #fff5f6;
+    --sidebar-bg: #881337;
+    --sidebar-foreground: #ffffff;
+
+    --color-stone-50: #fff1f2;
+    --color-stone-100: #ffe4e6;
+    --color-stone-200: #fecdd3;
+    --color-stone-300: #fda4af;
+    --color-stone-400: #fb7185;
+    --color-stone-500: #f43f5e;
+    --color-stone-600: #e11d48;
+    --color-stone-700: #be123c;
+    --color-stone-800: #9f1239;
+    --color-stone-900: #881337;
+  }
+
+  .theme-light-blue {
+    --primary: #0284c7;
+    --primary-foreground: #ffffff;
+    --accent: #f0f9ff;
+    --accent-foreground: #0c4a6e;
+    --muted: #f0f9ff;
+    --muted-foreground: #0369a1;
+    --border: #e0f2fe;
+    --background: #f8fafc;
+    --sidebar-bg: #0c4a6e;
+    --sidebar-foreground: #ffffff;
+
+    --color-stone-50: #f0f9ff;
+    --color-stone-100: #e0f2fe;
+    --color-stone-200: #bae6fd;
+    --color-stone-300: #7dd3fc;
+    --color-stone-400: #38bdf8;
+    --color-stone-500: #0ea5e9;
+    --color-stone-600: #0284c7;
+    --color-stone-700: #0369a1;
+    --color-stone-800: #075985;
+    --color-stone-900: #0c4a6e;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--primary);
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .animate-in {
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body, 
+  #root, 
+  main, 
+  .overflow-y-auto,
+  .min-h-screen.flex {
+    overflow: visible !important;
+    height: auto !important;
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Hide everything by default */
+  .no-print,
+  aside,
+  header,
+  nav,
+  button,
+  .fixed.inset-0.bg-stone-900\/60, /* Modal backdrop */
+  .shrink-0.bg-stone-50\/50, /* Modal header */
+  .p-6.bg-stone-50.border-t /* Modal footer */ {
+    display: none !important;
+  }
+
+  /* Ensure the modal container is visible and positioned correctly */
+  .fixed.inset-0.z-\[100\],
+  .fixed.inset-0.z-\[110\] {
+    position: static !important;
+    display: block !important;
+    background: white !important;
+    z-index: auto !important;
+  }
+
+  /* The modal content box */
+  .fixed.inset-0.z-\[100\] > div:last-child,
+  .fixed.inset-0.z-\[110\] > div:last-child {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  #receipt-content {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Force background colors to print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-only {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 9999 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+.print-only {
+  display: none !important;
+}

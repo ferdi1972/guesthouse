@@ -1,0 +1,280 @@
+{
+  "entities": {
+    "Guest": {
+      "title": "Guest",
+      "description": "A person who stays at the guesthouse.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "idNumber": { "type": "string" },
+        "vehicleRegistration": { "type": "string" },
+        "address": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email"]
+    },
+    "Room": {
+      "title": "Room",
+      "description": "A room available for booking.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "number": { "type": "string" },
+        "singleRate": { "type": "number" },
+        "doubleRate": { "type": "number" },
+        "hourlyRate": { "type": "number" },
+        "status": { "type": "string", "enum": ["Available", "Occupied", "Cleaning", "Maintenance"] },
+        "description": { "type": "string" },
+        "maintenanceNotes": { "type": "string" }
+      },
+      "required": ["number", "singleRate", "doubleRate", "hourlyRate"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A reservation for a room by a guest.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "guestId": { "type": "string" },
+        "roomId": { "type": "string" },
+        "checkIn": { "type": "string", "format": "date-time" },
+        "checkOut": { "type": "string", "format": "date-time" },
+        "rateType": { "type": "string", "enum": ["Single", "Double", "Hourly"] },
+        "hours": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "isPaid": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["Confirmed", "CheckedIn", "CheckedOut", "Cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["guestId", "roomId", "rateType", "totalAmount"]
+    },
+    "CashbookEntry": {
+      "title": "Cashbook Entry",
+      "description": "A financial transaction (income or expense).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["Income", "Expense"] },
+        "category": { "type": "string" },
+        "bookingId": { "type": "string" }
+      },
+      "required": ["date", "description", "amount", "type"]
+    },
+    "Settings": {
+      "title": "Guesthouse Settings",
+      "description": "Configuration and company information.",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "country": { "type": "string" },
+        "currency": { "type": "string" },
+        "taxRate": { "type": "number" },
+        "theme": { "type": "string" },
+        "backupFrequency": { "type": "string", "enum": ["none", "daily", "weekly", "monthly"] },
+        "lastBackupDate": { "type": "string", "format": "date-time" },
+        "landingTitle": { "type": "string" },
+        "landingDescription": { "type": "string" },
+        "landingButtonText": { "type": "string" }
+      },
+      "required": ["companyName"]
+    },
+    "LandingImage": {
+      "title": "Landing Image",
+      "description": "The background image for the landing page.",
+      "type": "object",
+      "properties": {
+        "landingImage": { "type": "string", "description": "Base64 encoded image string" }
+      },
+      "required": ["landingImage"]
+    },
+    "SupportLogo": {
+      "title": "Support Logo",
+      "description": "The logo displayed in the support section.",
+      "type": "object",
+      "properties": {
+        "supportLogo": { "type": "string", "description": "Base64 encoded image string" }
+      },
+      "required": ["supportLogo"]
+    },
+    "Staff": {
+      "title": "Staff Member",
+      "description": "A staff member who earns commission on revenue.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "commissionPercentage": { "type": "number" },
+        "lastPayoutDate": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "role", "commissionPercentage", "lastPayoutDate"]
+    },
+    "Receipt": {
+      "title": "Receipt",
+      "description": "A generated receipt for a booking.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "receiptNumber": { "type": "string" },
+        "bookingId": { "type": "string" },
+        "guestId": { "type": "string" },
+        "guestName": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "amount": { "type": "number" }
+            }
+          }
+        },
+        "paymentMethod": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["receiptNumber", "bookingId", "guestId", "guestName", "amount", "date"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "A user's profile and role in the system.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "manager", "staff", "user", "landlord"] },
+        "theme": { "type": "string", "enum": ["black-white", "bright-orange", "bright-green", "rosewood", "light-blue"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "role", "createdAt"]
+    },
+    "RoomInventoryItem": {
+      "title": "Room Inventory Item",
+      "description": "An item tracked within a specific room's inventory.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "roomId": { "type": "string" },
+        "name": { "type": "string" },
+        "quantity": { "type": "number" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["roomId", "name", "quantity", "lastUpdated"]
+    },
+    "ElectricityReading": {
+      "title": "Electricity Reading",
+      "description": "Daily electricity meter reading and revenue comparison.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "startReading": { "type": "number" },
+        "endReading": { "type": "number" },
+        "unitsUsed": { "type": "number" },
+        "dailyRevenue": { "type": "number" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "startReading", "endReading", "unitsUsed", "dailyRevenue"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "A financial budget for a specific category and period.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "month": { "type": "number" },
+        "year": { "type": "number" },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["month", "year", "category", "amount", "createdAt"]
+    },
+    "DiaryEntry": {
+      "title": "Diary Entry",
+      "description": "A private note or log entry for admins.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "title", "content", "authorId", "createdAt"]
+    },
+    "StickyNote": {
+      "title": "Sticky Note",
+      "description": "A short, colorful note for quick admin reminders.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "content": { "type": "string" },
+        "color": { "type": "string" },
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "color", "authorId", "createdAt"]
+    },
+    "PasswordEntry": {
+      "title": "Password Entry",
+      "description": "A secure entry for storing credentials.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string", "description": "Encrypted password string" },
+        "url": { "type": "string" },
+        "notes": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "username", "password", "authorId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "guests": { "schema": "Guest", "description": "List of guests" },
+    "rooms": { "schema": "Room", "description": "List of rooms" },
+    "bookings": { "schema": "Booking", "description": "List of bookings" },
+    "cashbook": { "schema": "CashbookEntry", "description": "Financial transactions" },
+    "settings/general": { "schema": "Settings", "description": "General app settings" },
+    "settings/landing_image": { "schema": "LandingImage", "description": "Landing page image" },
+    "settings/support_logo": { "schema": "SupportLogo", "description": "Support section logo" },
+    "staff": { "schema": "Staff", "description": "Staff members" },
+    "receipts": { "schema": "Receipt", "description": "Generated receipts" },
+    "users": { "schema": "UserProfile", "description": "System users and roles" },
+    "roomInventory": { "schema": "RoomInventoryItem", "description": "Inventory items for each room" },
+    "electricity": { "schema": "ElectricityReading", "description": "Daily electricity readings" },
+    "budgets": { "schema": "Budget", "description": "Financial budgets" },
+    "diary": { "schema": "DiaryEntry", "description": "Admin diary entries" },
+    "stickyNotes": { "schema": "StickyNote", "description": "Quick admin sticky notes" },
+    "passwordSafe": { "schema": "PasswordEntry", "description": "Secure password storage for admins" }
+  }
+}
