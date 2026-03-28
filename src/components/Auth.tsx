@@ -32,7 +32,7 @@ export default function Auth({ onBack }: AuthProps) {
 
     if (code === 'auth/email-already-in-use' || message.includes('auth/email-already-in-use')) {
       setIsLogin(true);
-      return 'This email is already registered. We\'ve switched you to the Sign In tab.';
+      return 'This email is already registered. We have switched you to the Sign In tab. If you previously used Google, please sign in with Google instead.';
     }
     
     if (code === 'auth/invalid-credential' || 
@@ -79,13 +79,17 @@ export default function Auth({ onBack }: AuthProps) {
         // Check if this is the first user
         const usersSnap = await getDocs(query(collection(db, 'users'), limit(1)));
         const isFirstUser = usersSnap.empty;
-        const isBootstrapAdmin = user.email && ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"].includes(user.email);
+        
+        const isAdminEmail = (email: string) => {
+          const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
+          return adminEmails.includes(email) || email.startsWith('admin@qwai');
+        };
 
         const newProfile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
           displayName: user.displayName || user.email?.split('@')[0] || 'Guest',
-          role: (isFirstUser || isBootstrapAdmin) ? 'admin' : 'user',
+          role: (isFirstUser || isAdminEmail(user.email || '')) ? 'admin' : 'user',
           theme: 'luxury',
           createdAt: new Date().toISOString()
         };
@@ -126,13 +130,17 @@ export default function Auth({ onBack }: AuthProps) {
         // Check if this is the first user OR the bootstrap admin
         const usersSnap = await getDocs(query(collection(db, 'users'), limit(1)));
         const isFirstUser = usersSnap.empty;
-        const isBootstrapAdmin = user.email && ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"].includes(user.email);
+        
+        const isAdminEmail = (email: string) => {
+          const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
+          return adminEmails.includes(email) || email.startsWith('admin@qwai');
+        };
 
         const newProfile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
           displayName: displayName || 'Guest',
-          role: (isFirstUser || isBootstrapAdmin) ? 'admin' : 'user', 
+          role: (isFirstUser || isAdminEmail(user.email || '')) ? 'admin' : 'user', 
           theme: 'luxury',
           createdAt: new Date().toISOString()
         };
@@ -182,6 +190,12 @@ export default function Auth({ onBack }: AuthProps) {
           {success && (
             <div className="p-4 bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm rounded-xl animate-in slide-in-from-top-2 duration-300">
               {success}
+            </div>
+          )}
+
+          {!isLogin && !isResetting && (
+            <div className="p-4 bg-blue-50 border border-blue-100 text-blue-600 text-sm rounded-xl animate-in slide-in-from-top-2 duration-300">
+              Already have an account? Switch to the <button type="button" onClick={() => setIsLogin(true)} className="font-bold underline">Sign In</button> tab.
             </div>
           )}
 
