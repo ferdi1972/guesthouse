@@ -263,12 +263,21 @@ export default function Contacts() {
                   </div>
                 )}
                 {contact.email && (
-                  <a href={`mailto:${contact.email}`} className="flex items-center gap-3 text-sm text-stone-600 hover:text-stone-900 transition-colors">
-                    <div className="w-8 h-8 rounded-lg bg-stone-50 flex items-center justify-center">
+                  <div className="flex items-center gap-2">
+                    <a href={`mailto:${contact.email}`} className="flex-1 flex items-center gap-3 text-sm text-stone-600 hover:text-stone-900 transition-colors">
+                      <div className="w-8 h-8 rounded-lg bg-stone-50 flex items-center justify-center">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">{contact.email}</span>
+                    </a>
+                    <a 
+                      href={`mailto:${contact.email}`}
+                      className="w-8 h-8 rounded-lg bg-stone-50 text-stone-400 flex items-center justify-center hover:bg-stone-900 hover:text-white transition-all"
+                      title="Send Email"
+                    >
                       <Mail className="w-4 h-4" />
-                    </div>
-                    <span className="truncate">{contact.email}</span>
-                  </a>
+                    </a>
+                  </div>
                 )}
                 {contact.address && (
                   <div className="flex items-start gap-3 text-sm text-stone-600">

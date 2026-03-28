@@ -152,19 +152,28 @@ export default function App() {
         const profile = snapshot.data() as UserProfile;
         
         // Bootstrap admin upgrade
-        if (user.email === 'ferditviljoen@gmail.com' && profile.role !== 'admin') {
+        const isAdminEmail = (email: string) => {
+          const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
+          return adminEmails.includes(email) || email.startsWith('admin@qwai');
+        };
+
+        if (isAdminEmail(user.email || '') && profile.role !== 'admin') {
           await setDoc(doc(db, 'users', user.uid), { ...profile, role: 'admin' }, { merge: true });
           setUserProfile({ ...profile, role: 'admin' });
         } else {
           setUserProfile(profile);
         }
       } else {
-        // Re-create profile if missing (e.g. after data clear)
+        const isAdminEmail = (email: string) => {
+          const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
+          return adminEmails.includes(email) || email.startsWith('admin@qwai');
+        };
+
         const newProfile: UserProfile = {
           uid: user.uid,
           email: user.email || '',
           displayName: user.displayName || user.email?.split('@')[0] || 'User',
-          role: user.email === 'ferditviljoen@gmail.com' ? 'admin' : 'user',
+          role: isAdminEmail(user.email || '') ? 'admin' : 'user',
           theme: 'luxury',
           createdAt: new Date().toISOString()
         };
