@@ -99,20 +99,6 @@ export default function LandingPage({ settings, onSignIn, showAuth, onCloseAuth 
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </button>
-              
-              <div className="flex items-center gap-4 px-6 py-5 rounded-full border border-[#1a1a1a]/10 bg-white/50 backdrop-blur-sm">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="w-10 h-10 rounded-full border-2 border-[#f5f2ed] bg-stone-200 overflow-hidden">
-                      <img src={`https://picsum.photos/seed/user${i}/100/100`} alt="" referrerPolicy="no-referrer" />
-                    </div>
-                  ))}
-                </div>
-                <div className="text-sm">
-                  <p className="font-bold">500+ Managers</p>
-                  <p className="text-[10px] uppercase tracking-widest opacity-50">Trust our platform</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
