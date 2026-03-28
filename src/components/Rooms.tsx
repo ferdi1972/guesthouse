@@ -46,6 +46,10 @@ interface RoomsProps {
 
 export default function Rooms({ settings, userProfile }: RoomsProps) {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Room | 'statusLabel'; direction: 'asc' | 'desc' }>({
+    key: 'number',
+    direction: 'asc'
+  });
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [guests, setGuests] = useState<Record<string, Guest>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,6 +68,8 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
     number: '',
     singleRate: '' as string | number,
     doubleRate: '' as string | number,
+    weekendSingleRate: '' as string | number,
+    weekendDoubleRate: '' as string | number,
     hourlyRate: '' as string | number,
     status: 'Available' as RoomStatus,
     description: '',
@@ -73,7 +79,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
   useEffect(() => {
     const unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
-      setRooms(list.sort((a, b) => a.number.localeCompare(b.number)));
+      setRooms(list);
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'rooms');
     });
@@ -163,6 +169,8 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
       ...formData,
       singleRate: Number(formData.singleRate) || 0,
       doubleRate: Number(formData.doubleRate) || 0,
+      weekendSingleRate: Number(formData.weekendSingleRate) || 0,
+      weekendDoubleRate: Number(formData.weekendDoubleRate) || 0,
       hourlyRate: Number(formData.hourlyRate) || 0,
     };
     try {
@@ -173,7 +181,17 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
       }
       setIsModalOpen(false);
       setEditingRoom(null);
-      setFormData({ number: '', singleRate: '', doubleRate: '', hourlyRate: '', status: 'Available', description: '', maintenanceNotes: '' });
+      setFormData({ 
+        number: '', 
+        singleRate: '', 
+        doubleRate: '', 
+        weekendSingleRate: '',
+        weekendDoubleRate: '',
+        hourlyRate: '', 
+        status: 'Available', 
+        description: '', 
+        maintenanceNotes: '' 
+      });
     } catch (error) {
       handleFirestoreError(error, editingRoom ? OperationType.UPDATE : OperationType.CREATE, path);
     }
@@ -273,36 +291,90 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
     return d;
   };
 
+  const sortedRooms = [...rooms].sort((a, b) => {
+    let aValue: any = a[sortConfig.key as keyof Room];
+    let bValue: any = b[sortConfig.key as keyof Room];
+
+    if (sortConfig.key === 'statusLabel') {
+      aValue = a.status;
+      bValue = b.status;
+    }
+
+    if (aValue === undefined || bValue === undefined) return 0;
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      const comparison = aValue.localeCompare(bValue, undefined, { numeric: true, sensitivity: 'base' });
+      return sortConfig.direction === 'asc' ? comparison : -comparison;
+    }
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+
+    return 0;
+  });
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-serif italic text-stone-900">Rooms Management</h1>
           <p className="text-stone-500 text-sm">Manage your guesthouse rooms and their current status.</p>
         </div>
-        {userProfile?.role === 'admin' && (
-          <button
-            onClick={() => {
-              setEditingRoom(null);
-              setFormData({ number: '', singleRate: '', doubleRate: '', hourlyRate: '', status: 'Available', description: '', maintenanceNotes: '' });
-              setIsModalOpen(true);
-            }}
-            className="bg-stone-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-stone-800 transition-all flex items-center gap-2 shadow-lg shadow-stone-900/10"
-          >
-            <Plus className="w-5 h-5" />
-            Add Room
-          </button>
-        )}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center bg-white border border-stone-200 rounded-xl px-3 py-1.5 shadow-sm">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mr-2">Sort:</span>
+            <select
+              value={sortConfig.key}
+              onChange={(e) => setSortConfig({ ...sortConfig, key: e.target.value as any })}
+              className="text-xs font-bold text-stone-600 bg-transparent outline-none cursor-pointer"
+            >
+              <option value="number">Room #</option>
+              <option value="statusLabel">Status</option>
+              <option value="singleRate">Single Rate</option>
+              <option value="doubleRate">Double Rate</option>
+            </select>
+            <button
+              onClick={() => setSortConfig({ ...sortConfig, direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })}
+              className="ml-2 text-stone-400 hover:text-stone-900 transition-colors"
+            >
+              {sortConfig.direction === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
+          {userProfile?.role === 'admin' && (
+            <button
+              onClick={() => {
+                setEditingRoom(null);
+                setFormData({ 
+                  number: '', 
+                  singleRate: '', 
+                  doubleRate: '', 
+                  weekendSingleRate: '',
+                  weekendDoubleRate: '',
+                  hourlyRate: '', 
+                  status: 'Available', 
+                  description: '', 
+                  maintenanceNotes: '' 
+                });
+                setIsModalOpen(true);
+              }}
+              className="bg-stone-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-stone-800 transition-all flex items-center gap-2 shadow-lg shadow-stone-900/10 flex-1 sm:flex-none"
+            >
+              <Plus className="w-5 h-5" />
+              Add Room
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {rooms.length === 0 ? (
+        {sortedRooms.length === 0 ? (
           <div className="col-span-full py-20 text-center bg-white rounded-3xl border border-dashed border-stone-200">
             <Bed className="w-12 h-12 text-stone-200 mx-auto mb-4" />
             <p className="text-stone-400 italic">No rooms added yet. Start by adding your first room.</p>
           </div>
         ) : (
-          rooms.map((room) => {
+          sortedRooms.map((room) => {
             const StatusIcon = statusIcons[room.status].icon;
             return (
               <div key={room.id} className="bg-white rounded-2xl border border-stone-200 shadow-sm hover:shadow-md transition-all group overflow-hidden">
@@ -319,13 +391,25 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Single Rate</span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Week Single</span>
                       <span className="text-sm font-mono font-bold text-stone-900">{settings?.currency || '$'} {room.singleRate}</span>
                     </div>
+                    {room.weekendSingleRate && room.weekendSingleRate !== room.singleRate && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">Weekend Single</span>
+                        <span className="text-xs font-mono font-bold text-rose-900">{settings?.currency || '$'} {room.weekendSingleRate}</span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Double Rate</span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Week Double</span>
                       <span className="text-sm font-mono font-bold text-stone-900">{settings?.currency || '$'} {room.doubleRate}</span>
                     </div>
+                    {room.weekendDoubleRate && room.weekendDoubleRate !== room.doubleRate && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">Weekend Double</span>
+                        <span className="text-xs font-mono font-bold text-rose-900">{settings?.currency || '$'} {room.weekendDoubleRate}</span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Hourly Rate</span>
                       <span className="text-sm font-mono font-bold text-stone-900">{settings?.currency || '$'} {room.hourlyRate}</span>
@@ -377,6 +461,8 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                             number: room.number,
                             singleRate: room.singleRate,
                             doubleRate: room.doubleRate,
+                            weekendSingleRate: room.weekendSingleRate || '',
+                            weekendDoubleRate: room.weekendDoubleRate || '',
                             hourlyRate: room.hourlyRate,
                             status: room.status,
                             description: room.description || '',
@@ -641,7 +727,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Single Rate</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Week Single Rate</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">{settings?.currency || 'R'}</span>
                     <input
@@ -655,7 +741,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Double Rate</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Week Double Rate</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">{settings?.currency || 'R'}</span>
                     <input
@@ -665,6 +751,35 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                       onChange={(e) => setFormData({ ...formData, doubleRate: e.target.value === '' ? '' : Number(e.target.value) })}
                       className="w-full pl-8 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
                       placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Weekend Single Rate</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">{settings?.currency || 'R'}</span>
+                    <input
+                      type="number"
+                      value={formData.weekendSingleRate || ''}
+                      onChange={(e) => setFormData({ ...formData, weekendSingleRate: e.target.value === '' ? '' : Number(e.target.value) })}
+                      className="w-full pl-8 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Weekend Double Rate</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">{settings?.currency || 'R'}</span>
+                    <input
+                      type="number"
+                      value={formData.weekendDoubleRate || ''}
+                      onChange={(e) => setFormData({ ...formData, weekendDoubleRate: e.target.value === '' ? '' : Number(e.target.value) })}
+                      className="w-full pl-8 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                      placeholder="Optional"
                     />
                   </div>
                 </div>
@@ -738,28 +853,30 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
       {/* Delete Confirmation Modal */}
       {isDeleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Trash2 className="text-rose-600 w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-serif italic text-stone-900 mb-2">Delete Room?</h3>
-            <p className="text-stone-500 text-sm mb-8">This action cannot be undone. Are you sure you want to remove this room from your inventory?</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setIsDeleteConfirmOpen(false);
-                  setRoomToDelete(null);
-                }}
-                className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
-              >
-                Delete
-              </button>
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="p-8 text-center overflow-y-auto custom-scrollbar">
+              <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 flex-shrink-0">
+                <Trash2 className="text-rose-600 w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-serif italic text-stone-900 mb-2">Delete Room?</h3>
+              <p className="text-stone-500 text-sm mb-8">This action cannot be undone. Are you sure you want to remove this room from your inventory?</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setIsDeleteConfirmOpen(false);
+                    setRoomToDelete(null);
+                  }}
+                  className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

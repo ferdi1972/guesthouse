@@ -5,11 +5,14 @@ export type TransactionType = 'Income' | 'Expense' | 'Refund';
 export interface Guest {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
   idNumber?: string;
   vehicleRegistration?: string;
   address?: string;
+  photoURL?: string;
+  isBlacklisted?: boolean;
+  blacklistReason?: string;
   createdAt: string;
 }
 
@@ -18,6 +21,8 @@ export interface Room {
   number: string;
   singleRate: number;
   doubleRate: number;
+  weekendSingleRate?: number;
+  weekendDoubleRate?: number;
   hourlyRate: number;
   status: RoomStatus;
   description?: string;
@@ -32,7 +37,7 @@ export interface RoomInventoryItem {
   lastUpdated: string;
 }
 
-export type RateType = 'Single' | 'Double' | 'Hourly';
+export type RateType = 'Week Single' | 'Week Double' | 'Weekend Single' | 'Weekend Double' | 'Hourly';
 
 export interface Booking {
   id: string;

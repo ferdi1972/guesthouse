@@ -426,27 +426,29 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
       {/* Delete Confirmation Modal */}
       {receiptToDelete && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 animate-in zoom-in-95 duration-300 text-center">
-            <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Trash2 className="w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-serif italic text-stone-900 mb-2">Delete Receipt?</h3>
-            <p className="text-stone-500 text-sm mb-8">
-              Are you sure you want to delete this receipt? This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setReceiptToDelete(null)}
-                className="flex-1 px-4 py-3 bg-stone-100 text-stone-600 rounded-xl font-bold hover:bg-stone-200 transition-all text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(receiptToDelete)}
-                className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all text-sm"
-              >
-                Delete
-              </button>
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="p-8 text-center overflow-y-auto custom-scrollbar">
+              <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-6 flex-shrink-0">
+                <Trash2 className="text-rose-600 w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-serif italic text-stone-900 mb-2">Delete Receipt?</h3>
+              <p className="text-stone-500 text-sm mb-8">
+                Are you sure you want to delete this receipt? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setReceiptToDelete(null)}
+                  className="flex-1 px-4 py-3 bg-stone-100 text-stone-600 rounded-xl font-bold hover:bg-stone-200 transition-all text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDelete(receiptToDelete)}
+                  className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all text-sm"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

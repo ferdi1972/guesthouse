@@ -40,14 +40,18 @@ service cloud.firestore {
     }
 
     function isValidGuest(data) {
-      return data.keys().hasAll(['name', 'email']) &&
+      return data.keys().hasAll(['name']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.email is string && data.email.size() > 5 &&
-             (!('phone' in data) || (data.phone is string && data.phone.size() < 20)) &&
-             (!('idNumber' in data) || (data.idNumber is string && data.idNumber.size() < 30)) &&
-             (!('vehicleRegistration' in data) || (data.vehicleRegistration is string && data.vehicleRegistration.size() < 20)) &&
-             (!('address' in data) || (data.address is string && data.address.size() < 200)) &&
-             (!('createdAt' in data) || data.createdAt is string);
+             (!('email' in data) || data.email == "" || (data.email is string && data.email.size() > 5)) &&
+             (!('phone' in data) || data.phone is string) &&
+             (!('idNumber' in data) || data.idNumber is string) &&
+             (!('vehicleRegistration' in data) || data.vehicleRegistration is string) &&
+             (!('address' in data) || data.address is string) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1048576)) &&
+             (!('isBlacklisted' in data) || data.isBlacklisted is bool) &&
+             (!('blacklistReason' in data) || data.blacklistReason is string) &&
+             (!('createdAt' in data) || data.createdAt is timestamp || data.createdAt is string) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp || data.updatedAt is string);
     }
 
     function isValidRoom(data) {
@@ -85,6 +89,13 @@ service cloud.firestore {
       // Allow staff to update room status (e.g. to 'Cleaning' or 'Available')
       let affected = request.resource.data.diff(resource.data).affectedKeys();
       return affected.hasOnly(['status']);
+    }
+
+    function isGuestBlacklistUpdate() {
+      // Allow staff to update blacklist status and reason
+      let affected = request.resource.data.diff(resource.data).affectedKeys();
+      let allowedKeys = ['isBlacklisted', 'blacklistReason', 'updatedAt'];
+      return affected.hasOnly(allowedKeys);
     }
 
     function isValidCashbookEntry(data) {
@@ -201,7 +212,8 @@ service cloud.firestore {
     match /guests/{guestId} {
       allow read: if isAuthenticated();
       allow create: if isStaff() && isValidGuest(request.resource.data);
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() || (isStaff() && isGuestBlacklistUpdate());
+      allow delete: if isAdmin();
     }
 
     match /rooms/{roomId} {

@@ -12,9 +12,12 @@
         "idNumber": { "type": "string" },
         "vehicleRegistration": { "type": "string" },
         "address": { "type": "string" },
+        "photoURL": { "type": "string", "description": "Base64 encoded profile picture" },
+        "isBlacklisted": { "type": "boolean" },
+        "blacklistReason": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "email"]
+      "required": ["name"]
     },
     "Room": {
       "title": "Room",

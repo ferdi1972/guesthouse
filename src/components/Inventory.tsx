@@ -44,7 +44,8 @@ export default function Inventory({ settings, userProfile }: InventoryProps) {
 
   useEffect(() => {
     const unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
-      setRooms(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room)));
+      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
+      setRooms(list.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })));
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'rooms');
     });
@@ -355,28 +356,30 @@ export default function Inventory({ settings, userProfile }: InventoryProps) {
       {/* Delete Confirmation Modal */}
       {isDeleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Trash2 className="text-rose-600 w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-serif italic text-stone-900 mb-2">Delete Item?</h3>
-            <p className="text-stone-500 text-sm mb-8">Are you sure you want to remove this item from the inventory? This action cannot be undone.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setIsDeleteConfirmOpen(false);
-                  setItemToDelete(null);
-                }}
-                className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteItem}
-                className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
-              >
-                Delete
-              </button>
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="p-8 text-center overflow-y-auto custom-scrollbar">
+              <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 flex-shrink-0">
+                <Trash2 className="text-rose-600 w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-serif italic text-stone-900 mb-2">Delete Item?</h3>
+              <p className="text-stone-500 text-sm mb-8">Are you sure you want to remove this item from the inventory? This action cannot be undone.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setIsDeleteConfirmOpen(false);
+                    setItemToDelete(null);
+                  }}
+                  className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteItem}
+                  className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -506,8 +506,8 @@ export default function App() {
       {/* Staff Messaging Modal */}
       {isStaffModalOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50 flex-shrink-0">
               <h3 className="font-serif italic text-2xl text-stone-900">Message</h3>
               <button 
                 onClick={() => setIsStaffModalOpen(false)}
@@ -516,7 +516,7 @@ export default function App() {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
               {staff.length === 0 ? (
                 <div className="text-center py-8 text-stone-400 italic">
                   No staff members found.

@@ -40,7 +40,8 @@ export default function Schedule() {
 
   useEffect(() => {
     const unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
-      setRooms(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room)));
+      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
+      setRooms(list.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })));
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'rooms');
     });

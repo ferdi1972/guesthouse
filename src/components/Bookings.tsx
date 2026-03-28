@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
+  ShieldAlert,
   Plus, 
   Calendar, 
   Clock, 
@@ -27,7 +28,7 @@ import {
 import { db } from '../firebase';
 import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, orderBy, getDocs, where } from 'firebase/firestore';
 import { Booking, Guest, Room, BookingStatus, Settings, RateType, Receipt, UserProfile } from '../types';
-import { format, differenceInDays, isBefore, startOfDay, parseISO } from 'date-fns';
+import { format, differenceInDays, isBefore, startOfDay, parseISO, addDays } from 'date-fns';
 import { cn } from '../lib/utils';
 import { auth } from '../firebase';
 import ReceiptsList from './ReceiptsList';
@@ -55,7 +56,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
   const [guestFormData, setGuestFormData] = useState({
     name: '',
     email: '',
-    phone: '+27',
+    phone: '',
     idNumber: '',
     vehicleRegistration: '',
     address: ''
@@ -83,7 +84,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
     checkOut: format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
     checkInTime: '14:00',
     checkOutTime: '10:00',
-    rateType: 'Single' as RateType,
+    rateType: 'Week Single' as RateType,
     hours: 1,
     status: 'Confirmed' as BookingStatus,
     totalAmount: 0,
@@ -102,14 +103,17 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       else if (formData.hours > 3) total = 450 + (formData.hours - 3) * 100;
       else total = (formData.hours || 0) * room.hourlyRate;
     } else {
-      const days = differenceInDays(new Date(formData.checkOut), new Date(formData.checkIn));
-      const nights = Math.max(1, days);
+      const start = new Date(formData.checkIn);
+      const end = new Date(formData.checkOut);
+      const nights = Math.max(1, differenceInDays(end, start));
       
-      if (formData.rateType === 'Single') {
-        total = nights * room.singleRate;
-      } else {
-        total = nights * room.doubleRate;
-      }
+      let rate = 0;
+      if (formData.rateType === 'Week Single') rate = room.singleRate;
+      else if (formData.rateType === 'Week Double') rate = room.doubleRate;
+      else if (formData.rateType === 'Weekend Single') rate = room.weekendSingleRate || room.singleRate;
+      else if (formData.rateType === 'Weekend Double') rate = room.weekendDoubleRate || room.doubleRate;
+      
+      total = nights * rate;
     }
     setFormData(prev => ({ ...prev, totalAmount: total }));
   }, [formData.roomId, formData.rateType, formData.hours, formData.checkIn, formData.checkOut, rooms]);
@@ -126,7 +130,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       handleFirestoreError(error, OperationType.GET, 'guests');
     });
     const unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
-      setRooms(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room)));
+      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
+      setRooms(list.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })));
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'rooms');
     });
@@ -198,7 +203,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       });
       setFormData({ ...formData, guestId: docRef.id });
       setIsGuestModalOpen(false);
-      setGuestFormData({ name: '', email: '', phone: '+27', idNumber: '', vehicleRegistration: '', address: '' });
+      setGuestFormData({ name: '', email: '', phone: '', idNumber: '', vehicleRegistration: '', address: '' });
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'guests');
     }
@@ -524,7 +529,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 checkOut: format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
                 checkInTime: '14:00',
                 checkOutTime: '10:00',
-                rateType: 'Single',
+                rateType: 'Week Single',
                 hours: 1,
                 status: 'Confirmed',
                 totalAmount: 0
@@ -643,6 +648,9 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                               {getGuestName(booking.guestId).charAt(0)}
                             </div>
                             <span className="font-medium text-stone-900">{getGuestName(booking.guestId)}</span>
+                            {guests.find(g => g.id === booking.guestId)?.isBlacklisted && (
+                              <ShieldAlert className="w-3 h-3 text-rose-600" />
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -844,6 +852,11 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       </div>
                       <div>
                         <h4 className="font-bold text-stone-900">{getGuestName(booking.guestId)}</h4>
+                        {guests.find(g => g.id === booking.guestId)?.isBlacklisted && (
+                          <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[8px] font-bold uppercase tracking-widest rounded flex items-center gap-1 w-fit mt-1">
+                            <ShieldAlert className="w-2 h-2" /> Blacklisted
+                          </span>
+                        )}
                         <div className="flex items-center gap-1 text-xs text-stone-500">
                           <Bed className="w-3 h-3" />
                           <span>Room {getRoomNumber(booking.roomId)}</span>
@@ -1002,8 +1015,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50 flex-shrink-0">
               <h3 className="font-serif italic text-2xl text-stone-900">
                 {editingBooking ? 'Edit Booking' : 'New Reservation'}
               </h3>
@@ -1014,7 +1027,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+            <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between ml-1">
@@ -1034,9 +1047,24 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                     className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all appearance-none"
                   >
                     <option value="">Choose a guest...</option>
-                    {guests.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                    {guests.map(g => (
+                      <option key={g.id} value={g.id} className={cn(g.isBlacklisted && "text-rose-600 font-bold")}>
+                        {g.name} {g.isBlacklisted ? '(BANNED)' : ''}
+                      </option>
+                    ))}
                   </select>
                 </div>
+                {formData.guestId && guests.find(g => g.id === formData.guestId)?.isBlacklisted && (
+                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <ShieldAlert className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-rose-600 uppercase tracking-wider">Security Alert: Guest is BANNED</p>
+                      <p className="text-xs text-rose-500 mt-1 leading-relaxed">
+                        Reason: {guests.find(g => g.id === formData.guestId)?.blacklistReason || 'No reason specified'}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Select Room</label>
                   <select
@@ -1048,7 +1076,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                     <option value="">Choose a room...</option>
                     {rooms.map(r => (
                       <option key={r.id} value={r.id} disabled={r.status === 'Occupied' && editingBooking?.roomId !== r.id}>
-                        Room {r.number} - S: {settings?.currency || '$'}{r.singleRate} | D: {settings?.currency || '$'}{r.doubleRate} | H: {settings?.currency || '$'}{r.hourlyRate}
+                        Room {r.number} - Week: {settings?.currency || '$'}{r.singleRate}/{r.doubleRate} | Weekend: {settings?.currency || '$'}{r.weekendSingleRate || r.singleRate}/{r.weekendDoubleRate || r.doubleRate} | H: {settings?.currency || '$'}{r.hourlyRate}
                       </option>
                     ))}
                   </select>
@@ -1127,8 +1155,10 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       }}
                       className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all appearance-none"
                     >
-                      <option value="Single">Single Rate</option>
-                      <option value="Double">Double Rate</option>
+                      <option value="Week Single">Week Single</option>
+                      <option value="Week Double">Week Double</option>
+                      <option value="Weekend Single">Weekend Single</option>
+                      <option value="Weekend Double">Weekend Double</option>
                       <option value="Hourly">Hourly Rate</option>
                     </select>
                   </div>
@@ -1260,7 +1290,13 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10"
+                  disabled={formData.guestId ? guests.find(g => g.id === formData.guestId)?.isBlacklisted : false}
+                  className={cn(
+                    "flex-1 px-6 py-3 rounded-xl font-bold transition-all shadow-lg",
+                    formData.guestId && guests.find(g => g.id === formData.guestId)?.isBlacklisted
+                      ? "bg-stone-200 text-stone-400 cursor-not-allowed shadow-none"
+                      : "bg-stone-900 text-white hover:bg-stone-800 shadow-stone-900/10"
+                  )}
                 >
                   {editingBooking ? 'Update Booking' : 'Confirm Booking'}
                 </button>
@@ -1272,8 +1308,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       {/* Cleaning Prompt Modal */}
       {cleaningPromptRoom && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 animate-in zoom-in-95 duration-300 text-center">
-            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 flex flex-col max-h-[90vh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-300 text-center">
+            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-6 flex-shrink-0">
               <Bed className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-serif italic text-stone-900 mb-2">Room Cleaning Prompt</h3>
@@ -1293,8 +1329,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       {/* Delete Confirmation Modal */}
       {isDeleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center flex flex-col max-h-[90vh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 flex-shrink-0">
               <Trash2 className="text-rose-600 w-8 h-8" />
             </div>
             <h3 className="text-xl font-serif italic text-stone-900 mb-2">Delete Booking?</h3>
@@ -1322,8 +1358,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       {/* New Guest Modal */}
       {isGuestModalOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50 flex-shrink-0">
               <h3 className="font-serif italic text-2xl text-stone-900">Quick Add Guest</h3>
               <button 
                 onClick={() => setIsGuestModalOpen(false)}
@@ -1332,7 +1368,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleSubmitGuest} className="p-8 space-y-6">
+            <form onSubmit={handleSubmitGuest} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Full Name</label>
@@ -1348,7 +1384,6 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Email Address</label>
                   <input
-                    required
                     type="email"
                     value={guestFormData.email}
                     onChange={(e) => setGuestFormData({ ...guestFormData, email: e.target.value })}
@@ -1418,8 +1453,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       {/* Payment Modal */}
       {isPaymentModalOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50 flex-shrink-0">
               <h3 className="font-serif italic text-2xl text-stone-900">Collect Payment</h3>
               <button 
                 onClick={() => setIsPaymentModalOpen(false)}
@@ -1428,7 +1463,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleCollectPayment} className="p-8 space-y-6">
+            <form onSubmit={handleCollectPayment} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
@@ -1497,8 +1532,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       {/* Refund Modal */}
       {isRefundModalOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50 flex-shrink-0">
               <h3 className="font-serif italic text-2xl text-stone-900">Process Refund</h3>
               <button 
                 onClick={() => setIsRefundModalOpen(false)}
@@ -1507,7 +1542,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleRefund} className="p-8 space-y-6">
+            <form onSubmit={handleRefund} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
@@ -1555,8 +1590,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       {/* Booking Details Modal */}
       {isDetailsModalOpen && selectedBooking && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50 flex-shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 font-bold text-lg">
                   {getGuestName(selectedBooking.guestId).charAt(0)}
@@ -1574,7 +1609,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
               </button>
             </div>
             
-            <div className="p-8 space-y-8">
+            <div className="p-6 md:p-8 space-y-8 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Stay Period</p>
@@ -1589,6 +1624,12 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       <span className="text-[10px] text-stone-500">{selectedBooking.checkOutTime || '10:00'}</span>
                     </div>
                   </div>
+                  <p className="text-[10px] text-stone-400 mt-2">
+                    {selectedBooking.rateType === 'Hourly' 
+                      ? `${selectedBooking.hours}h`
+                      : `${Math.max(1, differenceInDays(new Date(selectedBooking.checkOut), new Date(selectedBooking.checkIn)))} nights`
+                    }
+                  </p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Status</p>

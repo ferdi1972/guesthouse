@@ -603,38 +603,40 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
       {/* Delete Confirmation Modal */}
       {isDeleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Trash2 className="text-rose-600 w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-serif italic text-stone-900 mb-2">Remove Staff Member?</h3>
-            <p className="text-stone-500 text-sm mb-8">This will remove the staff member from the system. Historical payout records in the cashbook will remain.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setIsDeleteConfirmOpen(false);
-                  setStaffToDelete(null);
-                }}
-                className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  if (!staffToDelete) return;
-                  const id = staffToDelete;
-                  setIsDeleteConfirmOpen(false);
-                  setStaffToDelete(null);
-                  try {
-                    await deleteDoc(doc(db, 'staff', id));
-                  } catch (error) {
-                    handleFirestoreError(error, OperationType.DELETE, `staff/${id}`);
-                  }
-                }}
-                className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
-              >
-                Delete
-              </button>
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="p-8 text-center overflow-y-auto custom-scrollbar">
+              <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 flex-shrink-0">
+                <Trash2 className="text-rose-600 w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-serif italic text-stone-900 mb-2">Remove Staff Member?</h3>
+              <p className="text-stone-500 text-sm mb-8">This will remove the staff member from the system. Historical payout records in the cashbook will remain.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setIsDeleteConfirmOpen(false);
+                    setStaffToDelete(null);
+                  }}
+                  className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!staffToDelete) return;
+                    const id = staffToDelete;
+                    setIsDeleteConfirmOpen(false);
+                    setStaffToDelete(null);
+                    try {
+                      await deleteDoc(doc(db, 'staff', id));
+                    } catch (error) {
+                      handleFirestoreError(error, OperationType.DELETE, `staff/${id}`);
+                    }
+                  }}
+                  className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -643,43 +645,43 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
       {/* User Delete Confirmation Modal */}
       {isUserDeleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Trash2 className="text-rose-600 w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-serif italic text-stone-900 mb-2">Remove System User?</h3>
-            <p className="text-stone-500 text-sm mb-8">
-              Are you sure you want to remove <span className="font-bold text-stone-900">{userToDelete?.displayName}</span>? 
-              They will no longer be able to log in to the system.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setIsUserDeleteConfirmOpen(false);
-                  setUserToDelete(null);
-                }}
-                className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  if (!userToDelete) return;
-                  const uid = userToDelete.uid;
-                  setIsUserDeleteConfirmOpen(false);
-                  setUserToDelete(null);
-                  try {
-                    await deleteDoc(doc(db, 'users', uid));
-                  } catch (error) {
-                    const message = error instanceof Error ? error.message : String(error);
-                    alert(`Failed to remove user: ${message}`);
-                    handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
-                  }
-                }}
-                className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
-              >
-                Remove User
-              </button>
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="p-8 text-center overflow-y-auto custom-scrollbar">
+              <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 flex-shrink-0">
+                <Trash2 className="text-rose-600 w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-serif italic text-stone-900 mb-2">Remove System User?</h3>
+              <p className="text-stone-500 text-sm mb-8">
+                Are you sure you want to remove <span className="font-bold text-stone-900">{userToDelete?.displayName}</span>? 
+                They will no longer be able to log in to the system.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setIsUserDeleteConfirmOpen(false);
+                    setUserToDelete(null);
+                  }}
+                  className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!userToDelete) return;
+                    const uid = userToDelete.uid;
+                    setIsUserDeleteConfirmOpen(false);
+                    setUserToDelete(null);
+                    try {
+                      await deleteDoc(doc(db, 'users', uid));
+                    } catch (error) {
+                      handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
+                    }
+                  }}
+                  className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -688,28 +690,30 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
       {/* Clear All Users Confirmation Modal */}
       {isClearAllUsersConfirmOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Trash2 className="text-rose-600 w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-serif italic text-stone-900 mb-2">Clear All Users?</h3>
-            <p className="text-stone-500 text-sm mb-8">
-              This will remove <span className="font-bold text-rose-600">ALL</span> registered users except yourself. 
-              This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setIsClearAllUsersConfirmOpen(false)}
-                className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleClearAllUsers}
-                className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
-              >
-                Clear All
-              </button>
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="p-8 text-center overflow-y-auto custom-scrollbar">
+              <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 flex-shrink-0">
+                <Trash2 className="text-rose-600 w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-serif italic text-stone-900 mb-2">Clear All Users?</h3>
+              <p className="text-stone-500 text-sm mb-8">
+                This will remove <span className="font-bold text-rose-600">ALL</span> registered users except yourself. 
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsClearAllUsersConfirmOpen(false)}
+                  className="flex-1 px-6 py-3 border border-stone-200 text-stone-600 rounded-xl font-bold hover:bg-stone-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClearAllUsers}
+                  className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
+                >
+                  Clear All
+                </button>
+              </div>
             </div>
           </div>
         </div>
