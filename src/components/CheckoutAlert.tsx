@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { Booking, Guest, Room } from '../types';
 import { format, parseISO, addMinutes, isSameMinute } from 'date-fns';
+import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 export default function CheckoutAlert() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -43,13 +44,20 @@ export default function CheckoutAlert() {
       query(collection(db, 'bookings'), where('status', '==', 'CheckedIn')),
       (snap) => {
         setBookings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking)));
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, 'bookings');
       }
     );
     const unsubGuests = onSnapshot(collection(db, 'guests'), (snap) => {
       setGuests(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guest)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'guests');
     });
     const unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
       setRooms(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'rooms');
     });
 
     return () => {

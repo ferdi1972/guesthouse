@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Download, X } from 'lucide-react';
 import { Settings as SettingsType } from '../types';
 import { isBackupDue, createBackup } from '../services/backupService';
+import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 interface BackupCheckerProps {
   settings: SettingsType | null;
@@ -29,7 +30,7 @@ export default function BackupChecker({ settings }: BackupCheckerProps) {
       await createBackup(settings);
       setShowPrompt(false);
     } catch (error) {
-      console.error('Scheduled backup failed:', error);
+      handleFirestoreError(error, OperationType.WRITE, 'settings/general');
       alert('Scheduled backup failed. Please try again from settings.');
     } finally {
       setIsBackingUp(false);

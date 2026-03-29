@@ -1,6 +1,7 @@
 import { db } from '../firebase';
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { Settings as SettingsType } from '../types';
+import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 export const createBackup = async (settings: SettingsType | null) => {
   try {
@@ -38,7 +39,7 @@ export const createBackup = async (settings: SettingsType | null) => {
     
     return true;
   } catch (error) {
-    console.error('Error creating backup:', error);
+    handleFirestoreError(error, OperationType.WRITE, 'settings/general');
     throw error;
   }
 };

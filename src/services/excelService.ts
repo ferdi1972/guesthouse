@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 export const exportToExcel = async () => {
   try {
@@ -38,7 +39,7 @@ export const exportToExcel = async () => {
     
     return true;
   } catch (error) {
-    console.error('Error exporting to Excel:', error);
+    handleFirestoreError(error, OperationType.GET, 'multiple-collections');
     throw error;
   }
 };

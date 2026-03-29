@@ -84,6 +84,9 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
+    }, (error) => {
+      console.error('Auth state change error:', error);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -224,7 +227,9 @@ export default function App() {
     return () => window.removeEventListener('navigate', handleNavigate);
   }, []);
 
-  const handleLogout = () => signOut(auth);
+  const handleLogout = () => signOut(auth).catch(error => {
+    console.error('Logout error:', error);
+  });
 
   useEffect(() => {
     const theme = userProfile?.theme || settings?.theme || 'luxury';

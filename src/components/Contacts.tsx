@@ -31,6 +31,7 @@ import {
 } from 'firebase/firestore';
 import { Contact } from '../types';
 import { format } from 'date-fns';
+import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 export default function Contacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -62,6 +63,9 @@ export default function Contacts() {
       })) as Contact[];
       setContacts(contactsData);
       setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'contacts');
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -86,7 +90,7 @@ export default function Contacts() {
       }
       closeModal();
     } catch (error) {
-      console.error('Error saving contact:', error);
+      handleFirestoreError(error, editingContact ? OperationType.UPDATE : OperationType.CREATE, editingContact ? `contacts/${editingContact.id}` : 'contacts');
     }
   };
 
@@ -96,7 +100,7 @@ export default function Contacts() {
     try {
       await deleteDoc(doc(db, 'contacts', id));
     } catch (error) {
-      console.error('Error deleting contact:', error);
+      handleFirestoreError(error, OperationType.DELETE, `contacts/${id}`);
     } finally {
       setIsDeleting(null);
     }
