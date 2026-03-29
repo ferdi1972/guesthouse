@@ -57,6 +57,8 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
   useEffect(() => {
     const unsub = onSnapshot(query(collection(db, 'receipts'), orderBy('createdAt', 'desc')), (snap) => {
       setReceipts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Receipt)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'receipts');
     });
     return () => unsub();
   }, []);

@@ -391,22 +391,22 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Week Single</span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Single Rate</span>
                       <span className="text-sm font-mono font-bold text-stone-900">{settings?.currency || '$'} {room.singleRate}</span>
                     </div>
                     {room.weekendSingleRate && room.weekendSingleRate !== room.singleRate && (
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">Weekend Single</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">Weekend Rate Single</span>
                         <span className="text-xs font-mono font-bold text-rose-900">{settings?.currency || '$'} {room.weekendSingleRate}</span>
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Week Double</span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Double Rate</span>
                       <span className="text-sm font-mono font-bold text-stone-900">{settings?.currency || '$'} {room.doubleRate}</span>
                     </div>
                     {room.weekendDoubleRate && room.weekendDoubleRate !== room.doubleRate && (
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">Weekend Double</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">Weekend Rate Double</span>
                         <span className="text-xs font-mono font-bold text-rose-900">{settings?.currency || '$'} {room.weekendDoubleRate}</span>
                       </div>
                     )}
@@ -727,7 +727,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Week Single Rate</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Single Rate</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">{settings?.currency || 'R'}</span>
                     <input
@@ -741,7 +741,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Week Double Rate</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Double Rate</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">{settings?.currency || 'R'}</span>
                     <input
@@ -758,7 +758,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Weekend Single Rate</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Weekend Rate Single</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">{settings?.currency || 'R'}</span>
                     <input
@@ -771,7 +771,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Weekend Double Rate</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Weekend Rate Double</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">{settings?.currency || 'R'}</span>
                     <input

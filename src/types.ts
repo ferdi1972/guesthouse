@@ -37,7 +37,7 @@ export interface RoomInventoryItem {
   lastUpdated: string;
 }
 
-export type RateType = 'Week Single' | 'Week Double' | 'Weekend Single' | 'Weekend Double' | 'Hourly';
+export type RateType = 'Single' | 'Double' | 'Weekend Single' | 'Weekend Double' | 'Hourly';
 
 export interface Booking {
   id: string;

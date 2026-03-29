@@ -84,7 +84,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
     checkOut: format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
     checkInTime: '14:00',
     checkOutTime: '10:00',
-    rateType: 'Week Single' as RateType,
+    rateType: 'Single' as RateType,
     hours: 1,
     status: 'Confirmed' as BookingStatus,
     totalAmount: 0,
@@ -108,8 +108,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       const nights = Math.max(1, differenceInDays(end, start));
       
       let rate = 0;
-      if (formData.rateType === 'Week Single') rate = room.singleRate;
-      else if (formData.rateType === 'Week Double') rate = room.doubleRate;
+      if (formData.rateType === 'Single') rate = room.singleRate;
+      else if (formData.rateType === 'Double') rate = room.doubleRate;
       else if (formData.rateType === 'Weekend Single') rate = room.weekendSingleRate || room.singleRate;
       else if (formData.rateType === 'Weekend Double') rate = room.weekendDoubleRate || room.doubleRate;
       
@@ -529,7 +529,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 checkOut: format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
                 checkInTime: '14:00',
                 checkOutTime: '10:00',
-                rateType: 'Week Single',
+                rateType: 'Single',
                 hours: 1,
                 status: 'Confirmed',
                 totalAmount: 0
@@ -1076,7 +1076,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                     <option value="">Choose a room...</option>
                     {rooms.map(r => (
                       <option key={r.id} value={r.id} disabled={r.status === 'Occupied' && editingBooking?.roomId !== r.id}>
-                        Room {r.number} - Week: {settings?.currency || '$'}{r.singleRate}/{r.doubleRate} | Weekend: {settings?.currency || '$'}{r.weekendSingleRate || r.singleRate}/{r.weekendDoubleRate || r.doubleRate} | H: {settings?.currency || '$'}{r.hourlyRate}
+                        Room {r.number} - Single: {settings?.currency || '$'}{r.singleRate} | Double: {settings?.currency || '$'}{r.doubleRate} | Weekend: {settings?.currency || '$'}{r.weekendSingleRate || r.singleRate}/{r.weekendDoubleRate || r.doubleRate} | H: {settings?.currency || '$'}{r.hourlyRate}
                       </option>
                     ))}
                   </select>
@@ -1155,10 +1155,10 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       }}
                       className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all appearance-none"
                     >
-                      <option value="Week Single">Week Single</option>
-                      <option value="Week Double">Week Double</option>
-                      <option value="Weekend Single">Weekend Single</option>
-                      <option value="Weekend Double">Weekend Double</option>
+                      <option value="Single">Single Rate</option>
+                      <option value="Double">Double Rate</option>
+                      <option value="Weekend Single">Weekend Rate Single</option>
+                      <option value="Weekend Double">Weekend Rate Double</option>
                       <option value="Hourly">Hourly Rate</option>
                     </select>
                   </div>

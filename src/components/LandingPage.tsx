@@ -293,9 +293,11 @@ export default function LandingPage({ settings, onSignIn, showAuth, onCloseAuth 
               <a href="#" className="hover:opacity-100 transition-opacity">Cookie Policy</a>
             </div>
 
-            <p className="text-xs text-[#1a1a1a]/40 uppercase tracking-widest">
-              © {new Date().getFullYear()} All Rights Reserved
-            </p>
+            <div className="flex flex-col items-center md:items-end gap-2">
+              <p className="text-xs text-[#1a1a1a]/40 uppercase tracking-widest">
+                © {new Date().getFullYear()} All Rights Reserved
+              </p>
+            </div>
           </div>
         </div>
       </footer>

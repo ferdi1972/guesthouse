@@ -90,7 +90,7 @@ export default function App() {
 
   useEffect(() => {
     // Listen to general settings (Public)
-    const unsubSettings = onSnapshot(doc(db, 'settings', 'general'), (snapshot) => {
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'general'), async (snapshot) => {
       if (snapshot.exists()) {
         const generalData = snapshot.data();
         setSettings(prev => ({ ...prev, ...generalData } as SettingsType));
@@ -106,9 +106,15 @@ export default function App() {
           taxRate: 0,
           theme: 'luxury'
         };
-        setDoc(doc(db, 'settings', 'general'), defaultSettings);
+        try {
+          await setDoc(doc(db, 'settings', 'general'), defaultSettings);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.CREATE, 'settings/general');
+        }
       }
       setSettingsLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'settings/general');
     });
 
     // Listen to assets (Public)
@@ -116,12 +122,16 @@ export default function App() {
       if (snapshot.exists()) {
         setSettings(prev => ({ ...prev, landingImage: snapshot.data().landingImage } as SettingsType));
       }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'settings/landing_image');
     });
 
     const unsubSupportLogo = onSnapshot(doc(db, 'settings', 'support_logo'), (snapshot) => {
       if (snapshot.exists()) {
         setSettings(prev => ({ ...prev, supportLogo: snapshot.data().supportLogo } as SettingsType));
       }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'settings/support_logo');
     });
 
     return () => {
@@ -148,41 +158,43 @@ export default function App() {
 
     // Listen to user profile
     const unsubUser = onSnapshot(doc(db, 'users', user.uid), async (snapshot) => {
-      if (snapshot.exists()) {
-        const profile = snapshot.data() as UserProfile;
-        
-        // Bootstrap admin upgrade
-        const isAdminEmail = (email: string) => {
-          const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
-          return adminEmails.includes(email) || email.startsWith('admin@qwai');
-        };
+      try {
+        if (snapshot.exists()) {
+          const profile = snapshot.data() as UserProfile;
+          
+          // Bootstrap admin upgrade
+          const isAdminEmail = (email: string) => {
+            const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
+            return adminEmails.includes(email) || email.startsWith('admin@qwai');
+          };
 
-        if (isAdminEmail(user.email || '') && profile.role !== 'admin') {
-          await setDoc(doc(db, 'users', user.uid), { ...profile, role: 'admin' }, { merge: true });
-          setUserProfile({ ...profile, role: 'admin' });
+          if (isAdminEmail(user.email || '') && profile.role !== 'admin') {
+            await setDoc(doc(db, 'users', user.uid), { ...profile, role: 'admin' }, { merge: true });
+            setUserProfile({ ...profile, role: 'admin' });
+          } else {
+            setUserProfile(profile);
+          }
         } else {
-          setUserProfile(profile);
-        }
-      } else {
-        const isAdminEmail = (email: string) => {
-          const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
-          return adminEmails.includes(email) || email.startsWith('admin@qwai');
-        };
+          const isAdminEmail = (email: string) => {
+            const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
+            return adminEmails.includes(email) || email.startsWith('admin@qwai');
+          };
 
-        const newProfile: UserProfile = {
-          uid: user.uid,
-          email: user.email || '',
-          displayName: user.displayName || user.email?.split('@')[0] || 'User',
-          role: isAdminEmail(user.email || '') ? 'admin' : 'user',
-          theme: 'luxury',
-          createdAt: new Date().toISOString()
-        };
-        try {
+          const newProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || user.email?.split('@')[0] || 'User',
+            role: isAdminEmail(user.email || '') ? 'admin' : 'user',
+            theme: 'luxury',
+            createdAt: new Date().toISOString()
+          };
           await setDoc(doc(db, 'users', user.uid), newProfile);
-        } catch (error) {
-          handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}`);
         }
+      } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
       }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
     });
 
     // Listen to staff

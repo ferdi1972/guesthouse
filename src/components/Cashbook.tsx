@@ -112,6 +112,8 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
   useEffect(() => {
     const unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
       setBookings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'bookings');
     });
     const unsubGuests = onSnapshot(collection(db, 'guests'), (snap) => {
       const guestMap: Record<string, Guest> = {};
@@ -119,6 +121,8 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
         guestMap[doc.id] = { id: doc.id, ...doc.data() } as Guest;
       });
       setGuests(guestMap);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'guests');
     });
     return () => {
       unsubBookings();

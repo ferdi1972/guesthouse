@@ -16,6 +16,7 @@ import { collection, onSnapshot, query, where, limit, orderBy } from 'firebase/f
 import { Guest, Room, Booking, CashbookEntry, Settings } from '../types';
 import { format, isToday, isAfter, startOfMonth, endOfMonth } from 'date-fns';
 import { cn } from '../lib/utils';
+import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 interface DashboardProps {
   settings: Settings | null;
@@ -41,11 +42,15 @@ export default function Dashboard({ settings }: DashboardProps) {
         guestMap[doc.id] = { id: doc.id, ...doc.data() } as Guest;
       });
       setGuests(guestMap);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'guests');
     });
 
     const unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
       const available = snap.docs.filter(doc => doc.data().status === 'Available').length;
       setStats(prev => ({ ...prev, availableRooms: available }));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'rooms');
     });
 
     const unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
@@ -62,6 +67,8 @@ export default function Dashboard({ settings }: DashboardProps) {
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 5);
       setRecentBookings(sorted);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'bookings');
     });
 
     const unsubCash = onSnapshot(collection(db, 'cashbook'), (snap) => {
@@ -74,6 +81,8 @@ export default function Dashboard({ settings }: DashboardProps) {
           return sum;
         }, 0);
       setStats(prev => ({ ...prev, dailyRevenue: revenue }));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'cashbook');
     });
 
     return () => {
