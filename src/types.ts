@@ -58,6 +58,7 @@ export interface Booking {
   status: BookingStatus;
   lastPaymentMethod?: string;
   externalSource?: string;
+  externalUid?: string;
   createdAt: string;
 }
 

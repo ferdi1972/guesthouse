@@ -13,7 +13,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load Firebase config
-const firebaseConfig = JSON.parse(fs.readFileSync(path.join(__dirname, "firebase-applet-config.json"), "utf8"));
+const configPath = path.join(__dirname, "firebase-applet-config.json");
+console.log(`Loading config from: ${configPath}`);
+if (!fs.existsSync(configPath)) {
+  console.error(`Config file NOT FOUND at ${configPath}`);
+}
+const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
@@ -27,7 +32,17 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  const firestore = admin.firestore();
+  let firestore: admin.firestore.Firestore;
+  try {
+    firestore = firebaseConfig.firestoreDatabaseId 
+      ? admin.firestore(firebaseConfig.firestoreDatabaseId)
+      : admin.firestore();
+    console.log(`Firestore initialized with database: ${firebaseConfig.firestoreDatabaseId || "(default)"}`);
+  } catch (fsError) {
+    console.error("Failed to initialize Firestore:", fsError);
+    // Fallback to default if specific database fails
+    firestore = admin.firestore();
+  }
 
   app.use(express.json());
 
@@ -76,12 +91,14 @@ async function startServer() {
 
   // iCal Sync Endpoint
   app.post("/api/rooms/:roomId/sync", async (req, res) => {
+    console.log(`Starting sync for room: ${req.params.roomId}`);
     try {
       const { roomId } = req.params;
       const dbInstance = firestore;
       
       const roomDoc = await dbInstance.collection("rooms").doc(roomId).get();
       if (!roomDoc.exists) {
+        console.error(`Room ${roomId} not found`);
         return res.status(404).send("Room not found");
       }
       
@@ -91,6 +108,7 @@ async function startServer() {
         { url: roomData?.lekkeSlaapIcalUrl, source: "LekkeSlaap.co.za" }
       ].filter(item => item.url);
       
+      console.log(`Found ${urls.length} URLs to sync`);
       if (urls.length === 0) {
         return res.status(400).send("No iCal URLs configured for this room");
       }
@@ -99,43 +117,75 @@ async function startServer() {
       const now = new Date();
       
       for (const { url, source } of urls) {
-        const response = await axios.get(url);
-        const data = nodeIcal.parseICS(response.data);
-        
-        for (const k in data) {
-          const event = data[k];
-          if (event.type !== 'VEVENT') continue;
+        console.log(`Fetching iCal from ${source}: ${url}`);
+        try {
+          const response = await axios.get(url, { 
+            timeout: 15000,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+          });
+          const data = nodeIcal.parseICS(response.data);
           
-          const start = new Date(event.start as Date);
-          const end = new Date(event.end as Date);
+          console.log(`Parsed ${Object.keys(data).length} items from ${source}`);
           
-          // Skip past events
-          if (isBefore(end, startOfDay(now))) continue;
-          
-          // Check if booking already exists for this room and dates from this source
-          const existingSnap = await dbInstance.collection("bookings")
-            .where("roomId", "==", roomId)
-            .where("checkIn", "==", start.toISOString())
-            .where("checkOut", "==", end.toISOString())
-            .where("externalSource", "==", source)
-            .get();
+          for (const k in data) {
+            const event = data[k];
+            if (event.type !== 'VEVENT') continue;
             
-          if (existingSnap.empty) {
-            // Create external booking
-            await dbInstance.collection("bookings").add({
-              roomId,
-              guestId: "external_guest", // Placeholder
-              checkIn: start.toISOString(),
-              checkOut: end.toISOString(),
-              status: "External",
-              externalSource: source,
-              rateType: "Single", // Default
-              totalAmount: 0,
-              isPaid: true,
-              createdAt: now.toISOString()
-            });
-            newBookingsCount++;
+            const start = event.start as Date;
+            const end = event.end as Date;
+            const uid = event.uid as string;
+            
+            if (!start || !end || !uid) continue;
+            
+            // Skip past events
+            if (isBefore(end, startOfDay(now))) {
+              continue;
+            }
+            
+            const checkInStr = format(start, 'yyyy-MM-dd');
+            const checkOutStr = format(end, 'yyyy-MM-dd');
+            
+            // Check if booking already exists by externalUid
+            const existingSnap = await dbInstance.collection("bookings")
+              .where("roomId", "==", roomId)
+              .where("externalUid", "==", uid)
+              .get();
+              
+            if (existingSnap.empty) {
+              console.log(`Creating new external booking from ${source}: ${checkInStr} to ${checkOutStr} (UID: ${uid})`);
+              // Create external booking
+              await dbInstance.collection("bookings").add({
+                roomId,
+                guestId: "external_guest", // Placeholder
+                checkIn: checkInStr,
+                checkOut: checkOutStr,
+                status: "External",
+                externalSource: source,
+                externalUid: uid,
+                rateType: "Single", // Default
+                totalAmount: 0,
+                isPaid: true,
+                createdAt: now.toISOString()
+              });
+              newBookingsCount++;
+            } else {
+              // Update existing external booking if dates changed
+              const existingDoc = existingSnap.docs[0];
+              const existingData = existingDoc.data();
+              if (existingData.checkIn !== checkInStr || existingData.checkOut !== checkOutStr) {
+                console.log(`Updating external booking dates for UID ${uid}: ${existingData.checkIn} -> ${checkInStr}`);
+                await existingDoc.ref.update({
+                  checkIn: checkInStr,
+                  checkOut: checkOutStr,
+                  updatedAt: now.toISOString()
+                });
+              }
+            }
           }
+        } catch (fetchError: any) {
+          console.error(`Error fetching/parsing iCal from ${source}:`, fetchError.message);
         }
       }
       
@@ -143,6 +193,7 @@ async function startServer() {
         lastSyncAt: now.toISOString()
       });
       
+      console.log(`Sync complete for room ${roomId}. New bookings: ${newBookingsCount}`);
       res.json({ success: true, newBookingsCount });
     } catch (error) {
       console.error("iCal Sync Error:", error);
@@ -150,18 +201,38 @@ async function startServer() {
     }
   });
 
-  // No redirect needed, serving from root
+  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     console.log("Initializing Vite dev server...");
     const vite = await createViteServer({
       server: { 
-        middlewareMode: true
+        middlewareMode: true,
+        watch: {
+          usePolling: true,
+          interval: 100
+        }
       },
       appType: "spa",
       base: '/'
     });
     app.use(vite.middlewares);
-    console.log("Vite dev server initialized.");
+    
+    // SPA fallback for dev
+    app.use('*', async (req, res, next) => {
+      const url = req.originalUrl;
+      if (url.startsWith('/api')) return next();
+      
+      try {
+        let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e: any) {
+        vite.ssrFixStacktrace(e);
+        console.error("Vite transform error:", e);
+        res.status(500).end(e.stack);
+      }
+    });
+    console.log("Vite dev server initialized with SPA fallback.");
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     // Serve static files from root
@@ -179,4 +250,7 @@ async function startServer() {
   });
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error("CRITICAL ERROR during server startup:", err);
+  process.exit(1);
+});

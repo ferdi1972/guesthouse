@@ -54,6 +54,7 @@
         "isPaid": { "type": "boolean" },
         "status": { "type": "string", "enum": ["Confirmed", "CheckedIn", "CheckedOut", "Cancelled", "External"] },
         "externalSource": { "type": "string", "description": "Source of external booking (e.g. Booking.com)" },
+        "externalUid": { "type": "string", "description": "Unique ID from the external iCal feed" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["guestId", "roomId", "rateType", "totalAmount"]

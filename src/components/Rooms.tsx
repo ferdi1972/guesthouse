@@ -56,6 +56,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
+  const [syncingRoomId, setSyncingRoomId] = useState<string | null>(null);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [calendarRoom, setCalendarRoom] = useState<Room | null>(null);
   const [inventoryRoom, setInventoryRoom] = useState<Room | null>(null);
@@ -462,24 +463,40 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
 
                 <div className="px-4 py-3 bg-stone-50/50 border-t border-stone-100 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-2">
-                    {userProfile?.role === 'admin' && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const response = await fetch(`/api/rooms/${room.id}/sync`, { method: 'POST' });
-                            const data = await response.json();
-                            if (data.success) {
-                              alert(`Sync successful! Imported ${data.newBookingsCount} new bookings.`);
+                      {userProfile?.role === 'admin' && (
+                        <button
+                          disabled={syncingRoomId === room.id}
+                          onClick={async () => {
+                            try {
+                              setSyncingRoomId(room.id);
+                              const response = await fetch(`/api/rooms/${room.id}/sync`, { method: 'POST' });
+                              const data = await response.json();
+                              if (data.success) {
+                                alert(`Sync successful! Imported ${data.newBookingsCount} new bookings.`);
+                              } else {
+                                alert(`Sync failed: ${data.message || 'Unknown error'}`);
+                              }
+                            } catch (error) {
+                              console.error('Sync error:', error);
+                              alert('Failed to sync. Please check URLs and server logs.');
+                            } finally {
+                              setSyncingRoomId(null);
                             }
-                          } catch (error) {
-                            console.error('Sync error:', error);
-                            alert('Failed to sync. Please check URLs.');
-                          }
-                        }}
-                        className="text-[10px] font-bold uppercase tracking-wider text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
-                      >
-                        <Zap className="w-3 h-3" /> Sync
+                          }}
+                          className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1.5 rounded-lg ${
+                            syncingRoomId === room.id 
+                              ? 'text-stone-400 bg-stone-100 cursor-not-allowed' 
+                              : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                          }`}
+                        >
+                        <Zap className={`w-3 h-3 ${syncingRoomId === room.id ? 'animate-pulse' : ''}`} /> 
+                        {syncingRoomId === room.id ? 'Syncing...' : 'Sync'}
                       </button>
+                    )}
+                    {room.lastSyncAt && (
+                      <span className="text-[9px] text-stone-400 self-center">
+                        Last sync: {format(new Date(room.lastSyncAt), 'HH:mm')}
+                      </span>
                     )}
                     {userProfile?.role === 'admin' && (
                       <button
