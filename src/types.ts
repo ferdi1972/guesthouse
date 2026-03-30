@@ -1,5 +1,5 @@
 export type RoomStatus = 'Available' | 'Occupied' | 'Cleaning' | 'Maintenance';
-export type BookingStatus = 'Confirmed' | 'CheckedIn' | 'CheckedOut' | 'Cancelled';
+export type BookingStatus = 'Confirmed' | 'CheckedIn' | 'CheckedOut' | 'Cancelled' | 'External';
 export type TransactionType = 'Income' | 'Expense' | 'Refund';
 
 export interface Guest {
@@ -27,6 +27,9 @@ export interface Room {
   status: RoomStatus;
   description?: string;
   maintenanceNotes?: string;
+  bookingComIcalUrl?: string;
+  lekkeSlaapIcalUrl?: string;
+  lastSyncAt?: string;
 }
 
 export interface RoomInventoryItem {
@@ -54,6 +57,7 @@ export interface Booking {
   isPaid?: boolean;
   status: BookingStatus;
   lastPaymentMethod?: string;
+  externalSource?: string;
   createdAt: string;
 }
 

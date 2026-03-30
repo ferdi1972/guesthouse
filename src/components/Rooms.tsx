@@ -16,7 +16,8 @@ import {
   Package,
   Plus as PlusIcon,
   Minus,
-  Trash
+  Trash,
+  Zap
 } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, getDocFromServer, query, where } from 'firebase/firestore';
@@ -73,7 +74,9 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
     hourlyRate: '' as string | number,
     status: 'Available' as RoomStatus,
     description: '',
-    maintenanceNotes: ''
+    maintenanceNotes: '',
+    bookingComIcalUrl: '',
+    lekkeSlaapIcalUrl: ''
   });
 
   useEffect(() => {
@@ -190,7 +193,9 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
         hourlyRate: '', 
         status: 'Available', 
         description: '', 
-        maintenanceNotes: '' 
+        maintenanceNotes: '',
+        bookingComIcalUrl: '',
+        lekkeSlaapIcalUrl: ''
       });
     } catch (error) {
       handleFirestoreError(error, editingRoom ? OperationType.UPDATE : OperationType.CREATE, path);
@@ -268,13 +273,15 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                 {dayBookings.map((b, idx) => (
                   <div 
                     key={idx} 
-                    className={cn(
-                      "text-[9px] px-1.5 py-0.5 rounded truncate font-medium",
-                      b.status === 'CheckedIn' ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
-                    )}
-                    title={`${guests[b.guestId]?.name || 'Guest'} (${b.status})`}
-                  >
-                    {guests[b.guestId]?.name || 'Guest'}
+                      className={cn(
+                        "text-[9px] px-1.5 py-0.5 rounded truncate font-medium",
+                        b.status === 'CheckedIn' ? "bg-emerald-100 text-emerald-700" : 
+                        b.status === 'External' ? "bg-purple-100 text-purple-700" :
+                        "bg-blue-100 text-blue-700"
+                      )}
+                      title={`${b.status === 'External' ? `External: ${b.externalSource}` : (guests[b.guestId]?.name || 'Guest')} (${b.status})`}
+                    >
+                      {b.status === 'External' ? `Ext: ${b.externalSource}` : (guests[b.guestId]?.name || 'Guest')}
                   </div>
                 ))}
               </div>
@@ -354,7 +361,9 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   hourlyRate: '', 
                   status: 'Available', 
                   description: '', 
-                  maintenanceNotes: '' 
+                  maintenanceNotes: '',
+                  bookingComIcalUrl: '',
+                  lekkeSlaapIcalUrl: ''
                 });
                 setIsModalOpen(true);
               }}
@@ -455,6 +464,25 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   <div className="flex flex-wrap gap-2">
                     {userProfile?.role === 'admin' && (
                       <button
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`/api/rooms/${room.id}/sync`, { method: 'POST' });
+                            const data = await response.json();
+                            if (data.success) {
+                              alert(`Sync successful! Imported ${data.newBookingsCount} new bookings.`);
+                            }
+                          } catch (error) {
+                            console.error('Sync error:', error);
+                            alert('Failed to sync. Please check URLs.');
+                          }
+                        }}
+                        className="text-[10px] font-bold uppercase tracking-wider text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors p-1.5 hover:bg-blue-50 rounded-lg"
+                      >
+                        <Zap className="w-3 h-3" /> Sync
+                      </button>
+                    )}
+                    {userProfile?.role === 'admin' && (
+                      <button
                         onClick={() => {
                           setEditingRoom(room);
                           setFormData({
@@ -466,7 +494,9 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                             hourlyRate: room.hourlyRate,
                             status: room.status,
                             description: room.description || '',
-                            maintenanceNotes: room.maintenanceNotes || ''
+                            maintenanceNotes: room.maintenanceNotes || '',
+                            bookingComIcalUrl: room.bookingComIcalUrl || '',
+                            lekkeSlaapIcalUrl: room.lekkeSlaapIcalUrl || ''
                           });
                           setIsModalOpen(true);
                         }}
@@ -690,6 +720,10 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Checked In</span>
               </div>
               <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded bg-purple-100 border border-purple-200" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">External</span>
+              </div>
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-blue-50/30 border border-blue-100" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Today</span>
               </div>
@@ -831,6 +865,41 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   />
                 </div>
               )}
+
+              <div className="space-y-4 border-t border-stone-100 pt-6">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-stone-900">Channel Manager (iCal Sync)</h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Booking.com iCal URL</label>
+                    <input
+                      type="url"
+                      value={formData.bookingComIcalUrl}
+                      onChange={(e) => setFormData({ ...formData, bookingComIcalUrl: e.target.value })}
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all text-xs"
+                      placeholder="https://admin.booking.com/hotel/hoteladmin/ical.html?..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">LekkeSlaap iCal URL</label>
+                    <input
+                      type="url"
+                      value={formData.lekkeSlaapIcalUrl}
+                      onChange={(e) => setFormData({ ...formData, lekkeSlaapIcalUrl: e.target.value })}
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all text-xs"
+                      placeholder="https://www.lekkeslaap.co.za/ical/..."
+                    />
+                  </div>
+                  {editingRoom && (
+                    <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">Export URL</p>
+                      <p className="text-[10px] font-mono break-all text-blue-800 select-all">
+                        {window.location.origin}/api/rooms/{editingRoom.id}/export.ics
+                      </p>
+                      <p className="text-[9px] text-blue-500 mt-1 italic">Copy this URL to Booking.com/LekkeSlaap export settings.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="pt-4 flex gap-3">
                 <button
                   type="button"

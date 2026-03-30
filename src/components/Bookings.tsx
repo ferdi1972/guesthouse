@@ -596,6 +596,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                     <option value="CheckedIn">Checked In</option>
                     <option value="CheckedOut">Checked Out</option>
                     <option value="Cancelled">Cancelled</option>
+                    <option value="External">External</option>
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -653,13 +654,20 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                         }}
                         className="hover:bg-stone-50/50 transition-colors group cursor-pointer"
                       >
-                        <td className="px-6 py-4">
+                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 font-bold text-xs">
-                              {getGuestName(booking.guestId).charAt(0)}
+                              {booking.status === 'External' ? 'E' : getGuestName(booking.guestId).charAt(0)}
                             </div>
-                            <span className="font-medium text-stone-900">{getGuestName(booking.guestId)}</span>
-                            {guests.find(g => g.id === booking.guestId)?.isBlacklisted && (
+                            <div className="flex flex-col">
+                              <span className="font-medium text-stone-900">
+                                {booking.status === 'External' ? `External: ${booking.externalSource}` : getGuestName(booking.guestId)}
+                              </span>
+                              {booking.status === 'External' && (
+                                <span className="text-[10px] text-stone-400 uppercase tracking-wider">Sync Booking</span>
+                              )}
+                            </div>
+                            {booking.status !== 'External' && guests.find(g => g.id === booking.guestId)?.isBlacklisted && (
                               <ShieldAlert className="w-3 h-3 text-rose-600" />
                             )}
                           </div>
@@ -696,6 +704,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                             booking.status === 'CheckedIn' && "bg-emerald-50 text-emerald-600",
                             booking.status === 'CheckedOut' && "bg-stone-100 text-stone-600",
                             booking.status === 'Cancelled' && "bg-rose-50 text-rose-600",
+                            booking.status === 'External' && "bg-purple-50 text-purple-600",
                           )}>
                             {booking.status}
                           </span>
@@ -880,6 +889,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       booking.status === 'CheckedIn' && "bg-emerald-50 text-emerald-600",
                       booking.status === 'CheckedOut' && "bg-stone-100 text-stone-600",
                       booking.status === 'Cancelled' && "bg-rose-50 text-rose-600",
+                      booking.status === 'External' && "bg-purple-50 text-purple-600",
                     )}>
                       {booking.status}
                     </span>
@@ -1184,6 +1194,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       <option value="CheckedIn">Checked In</option>
                       <option value="CheckedOut">Checked Out</option>
                       <option value="Cancelled">Cancelled</option>
+                      <option value="External">External</option>
                     </select>
                   </div>
                 </div>
@@ -1650,6 +1661,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                     selectedBooking.status === 'CheckedIn' && "bg-emerald-50 text-emerald-600",
                     selectedBooking.status === 'CheckedOut' && "bg-stone-100 text-stone-600",
                     selectedBooking.status === 'Cancelled' && "bg-rose-50 text-rose-600",
+                    selectedBooking.status === 'External' && "bg-purple-50 text-purple-600",
                   )}>
                     {selectedBooking.status}
                   </span>

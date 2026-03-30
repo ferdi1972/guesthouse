@@ -31,7 +31,10 @@
         "hourlyRate": { "type": "number" },
         "status": { "type": "string", "enum": ["Available", "Occupied", "Cleaning", "Maintenance"] },
         "description": { "type": "string" },
-        "maintenanceNotes": { "type": "string" }
+        "maintenanceNotes": { "type": "string" },
+        "bookingComIcalUrl": { "type": "string", "description": "iCal URL from Booking.com" },
+        "lekkeSlaapIcalUrl": { "type": "string", "description": "iCal URL from LekkeSlaap.co.za" },
+        "lastSyncAt": { "type": "string", "format": "date-time" }
       },
       "required": ["number", "singleRate", "doubleRate", "hourlyRate"]
     },
@@ -49,7 +52,8 @@
         "hours": { "type": "number" },
         "totalAmount": { "type": "number" },
         "isPaid": { "type": "boolean" },
-        "status": { "type": "string", "enum": ["Confirmed", "CheckedIn", "CheckedOut", "Cancelled"] },
+        "status": { "type": "string", "enum": ["Confirmed", "CheckedIn", "CheckedOut", "Cancelled", "External"] },
+        "externalSource": { "type": "string", "description": "Source of external booking (e.g. Booking.com)" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["guestId", "roomId", "rateType", "totalAmount"]
