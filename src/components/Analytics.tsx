@@ -64,13 +64,21 @@ export default function Analytics({ settings }: AnalyticsProps) {
 
   const incomeEntries = entries.filter(e => e.type === 'Income' || e.type === 'Refund');
 
+  const safeNewDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   // Daily Revenue (Last 7 Days)
   const dailyData = eachDayOfInterval({
     start: subDays(new Date(), 6),
     end: new Date()
   }).map(date => {
     const dayIncome = incomeEntries
-      .filter(e => isSameDay(new Date(e.date), date))
+      .filter(e => {
+        const entryDate = safeNewDate(e.date);
+        return entryDate ? isSameDay(entryDate, date) : false;
+      })
       .reduce((sum, e) => {
         if (e.type === 'Income') return sum + e.amount;
         if (e.type === 'Refund') return sum - e.amount;
@@ -89,7 +97,10 @@ export default function Analytics({ settings }: AnalyticsProps) {
     end: new Date()
   }).map(date => {
     const weekIncome = incomeEntries
-      .filter(e => isSameWeek(new Date(e.date), date))
+      .filter(e => {
+        const entryDate = safeNewDate(e.date);
+        return entryDate ? isSameWeek(entryDate, date) : false;
+      })
       .reduce((sum, e) => {
         if (e.type === 'Income') return sum + e.amount;
         if (e.type === 'Refund') return sum - e.amount;
@@ -108,7 +119,10 @@ export default function Analytics({ settings }: AnalyticsProps) {
     end: new Date()
   }).map(date => {
     const monthIncome = incomeEntries
-      .filter(e => isSameMonth(new Date(e.date), date))
+      .filter(e => {
+        const entryDate = safeNewDate(e.date);
+        return entryDate ? isSameMonth(entryDate, date) : false;
+      })
       .reduce((sum, e) => {
         if (e.type === 'Income') return sum + e.amount;
         if (e.type === 'Refund') return sum - e.amount;
@@ -133,8 +147,8 @@ export default function Analytics({ settings }: AnalyticsProps) {
     .filter(b => b.month === currentMonth && b.year === currentYear && b.category !== 'Income')
     .reduce((sum, b) => sum + b.amount, 0);
 
-  const todayRevenue = dailyData[dailyData.length - 1].amount;
-  const yesterdayRevenue = dailyData[dailyData.length - 2].amount;
+  const todayRevenue = dailyData.length > 0 ? dailyData[dailyData.length - 1].amount : 0;
+  const yesterdayRevenue = dailyData.length > 1 ? dailyData[dailyData.length - 2].amount : 0;
   const dailyGrowth = yesterdayRevenue === 0 ? 100 : ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100;
 
   return (
@@ -170,7 +184,7 @@ export default function Analytics({ settings }: AnalyticsProps) {
           </div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Current Month</p>
           <h3 className="text-2xl font-serif font-bold text-stone-900">
-            {settings?.currency || '$'} {monthlyData[monthlyData.length - 1].amount.toLocaleString()}
+            {settings?.currency || '$'} {(monthlyData.length > 0 ? monthlyData[monthlyData.length - 1].amount : 0).toLocaleString()}
           </h3>
         </div>
 

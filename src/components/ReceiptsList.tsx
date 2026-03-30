@@ -63,6 +63,17 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
     return () => unsub();
   }, []);
 
+  const safeFormat = (dateStr: any, formatStr: string) => {
+    if (!dateStr) return 'N/A';
+    try {
+      const date = dateStr.toDate ? dateStr.toDate() : (typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr));
+      if (isNaN(date.getTime())) return 'N/A';
+      return format(date, formatStr);
+    } catch (e) {
+      return 'N/A';
+    }
+  };
+
   const filteredReceipts = receipts.filter(r => {
     const matchesSearch = r.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          r.receiptNumber.toLowerCase().includes(searchTerm.toLowerCase());
@@ -147,11 +158,11 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
       (settings?.phone ? `Phone: ${settings.phone}\n` : '') +
       `Receipt #: ${receipt.receiptNumber}\n` +
       `Guest: ${receipt.guestName}\n` +
-      (receipt.checkIn ? `Stay: ${format(parseISO(receipt.checkIn), 'MMM dd')} (${receipt.checkInTime || '14:00'}) to ${format(parseISO(receipt.checkOut!), 'MMM dd')} (${receipt.checkOutTime || '10:00'})\n` : '') +
+      (receipt.checkIn ? `Stay: ${safeFormat(receipt.checkIn, 'MMM dd')} (${receipt.checkInTime || '14:00'}) to ${safeFormat(receipt.checkOut!, 'MMM dd')} (${receipt.checkOutTime || '10:00'})\n` : '') +
       `Total: ${settings?.currency || '$'} ${(receipt.totalAmount || receipt.amount).toLocaleString()}\n` +
       `Paid: ${settings?.currency || '$'} ${(receipt.paidAmount || 0).toLocaleString()}\n` +
       `Balance: ${settings?.currency || '$'} ${(receipt.balance || 0).toLocaleString()}\n` +
-      `Date: ${format(parseISO(receipt.date), 'MMM dd, yyyy')}`;
+      `Date: ${safeFormat(receipt.date, 'MMM dd, yyyy')}`;
     
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
@@ -165,11 +176,11 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
       (settings?.phone ? `${settings.phone}\n` : '') +
       `\n` +
       `Receipt #: ${receipt.receiptNumber}\n` +
-      (receipt.checkIn ? `Stay: ${format(parseISO(receipt.checkIn), 'MMM dd, yyyy')} (${receipt.checkInTime || '14:00'}) to ${format(parseISO(receipt.checkOut!), 'MMM dd, yyyy')} (${receipt.checkOutTime || '10:00'})\n` : '') +
+      (receipt.checkIn ? `Stay: ${safeFormat(receipt.checkIn, 'MMM dd, yyyy')} (${receipt.checkInTime || '14:00'}) to ${safeFormat(receipt.checkOut!, 'MMM dd, yyyy')} (${receipt.checkOutTime || '10:00'})\n` : '') +
       `Total: ${settings?.currency || '$'} ${(receipt.totalAmount || receipt.amount).toLocaleString()}\n` +
       `Paid: ${settings?.currency || '$'} ${(receipt.paidAmount || 0).toLocaleString()}\n` +
       `Balance: ${settings?.currency || '$'} ${(receipt.balance || 0).toLocaleString()}\n` +
-      `Date: ${format(parseISO(receipt.date), 'MMM dd, yyyy')}\n\n` +
+      `Date: ${safeFormat(receipt.date, 'MMM dd, yyyy')}\n\n` +
       `Thank you for staying with us!`;
     
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -304,8 +315,8 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm text-stone-500">
-                        <Calendar className="w-4 h-4 text-stone-400" />
-                        <span>{format(parseISO(receipt.date), 'MMM dd, yyyy')}</span>
+                         <Calendar className="w-4 h-4 text-stone-400" />
+                         <span>{safeFormat(receipt.date, 'MMM dd, yyyy')}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right font-mono font-bold text-stone-900">
@@ -366,7 +377,7 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Date</p>
-                    <p className="text-xs text-stone-700">{format(parseISO(receipt.date), 'MMM dd, yyyy')}</p>
+                    <p className="text-xs text-stone-700">{safeFormat(receipt.date, 'MMM dd, yyyy')}</p>
                   </div>
                 </div>
 
@@ -499,7 +510,7 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                     {selectedReceipt.status === 'Cancelled' ? 'CANCELLED' : 'RECEIPT'}
                   </h1>
                   <p className="text-sm font-mono font-bold text-stone-900">{selectedReceipt.receiptNumber}</p>
-                  <p className="text-[10px] text-stone-400">{format(parseISO(selectedReceipt.date), 'MMMM dd, yyyy')}</p>
+                  <p className="text-[10px] text-stone-400">{safeFormat(selectedReceipt.date, 'MMMM dd, yyyy')}</p>
                 </div>
               </div>
 
@@ -513,14 +524,14 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                   <div>
                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Check In</h4>
                     <p className="text-xs font-medium text-stone-900">
-                      {selectedReceipt.checkIn ? format(parseISO(selectedReceipt.checkIn), 'MMM dd, yyyy') : 'N/A'}
+                      {selectedReceipt.checkIn ? safeFormat(selectedReceipt.checkIn, 'MMM dd, yyyy') : 'N/A'}
                     </p>
                     <p className="text-[10px] text-stone-500 font-mono">{selectedReceipt.checkInTime || '14:00'}</p>
                   </div>
                   <div className="text-right">
                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Check Out</h4>
                     <p className="text-xs font-medium text-stone-900">
-                      {selectedReceipt.checkOut ? format(parseISO(selectedReceipt.checkOut), 'MMM dd, yyyy') : 'N/A'}
+                      {selectedReceipt.checkOut ? safeFormat(selectedReceipt.checkOut, 'MMM dd, yyyy') : 'N/A'}
                     </p>
                     <p className="text-[10px] text-stone-500 font-mono">{selectedReceipt.checkOutTime || '10:00'}</p>
                   </div>

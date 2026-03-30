@@ -426,11 +426,11 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       (settings?.phone ? `Phone: ${settings.phone}\n` : '') +
       `Receipt #: ${receipt.receiptNumber}\n` +
       `Guest: ${receipt.guestName}\n` +
-      (receipt.checkIn ? `Stay: ${format(parseISO(receipt.checkIn), 'MMM dd')} (${receipt.checkInTime || '14:00'}) to ${format(parseISO(receipt.checkOut!), 'MMM dd')} (${receipt.checkOutTime || '10:00'})\n` : '') +
+      (receipt.checkIn ? `Stay: ${safeFormat(receipt.checkIn, 'MMM dd')} (${receipt.checkInTime || '14:00'}) to ${safeFormat(receipt.checkOut!, 'MMM dd')} (${receipt.checkOutTime || '10:00'})\n` : '') +
       `Total: ${settings?.currency || '$'} ${(receipt.totalAmount || receipt.amount).toLocaleString()}\n` +
       `Paid: ${settings?.currency || '$'} ${(receipt.paidAmount || 0).toLocaleString()}\n` +
       `Balance: ${settings?.currency || '$'} ${(receipt.balance || 0).toLocaleString()}\n` +
-      `Date: ${format(parseISO(receipt.date), 'MMM dd, yyyy')}`;
+      `Date: ${safeFormat(receipt.date, 'MMM dd, yyyy')}`;
     
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
@@ -444,11 +444,11 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       (settings?.phone ? `${settings.phone}\n` : '') +
       `\n` +
       `Receipt #: ${receipt.receiptNumber}\n` +
-      (receipt.checkIn ? `Stay: ${format(parseISO(receipt.checkIn), 'MMM dd, yyyy')} (${receipt.checkInTime || '14:00'}) to ${format(parseISO(receipt.checkOut!), 'MMM dd, yyyy')} (${receipt.checkOutTime || '10:00'})\n` : '') +
+      (receipt.checkIn ? `Stay: ${safeFormat(receipt.checkIn, 'MMM dd, yyyy')} (${receipt.checkInTime || '14:00'}) to ${safeFormat(receipt.checkOut!, 'MMM dd, yyyy')} (${receipt.checkOutTime || '10:00'})\n` : '') +
       `Total: ${settings?.currency || '$'} ${(receipt.totalAmount || receipt.amount).toLocaleString()}\n` +
       `Paid: ${settings?.currency || '$'} ${(receipt.paidAmount || 0).toLocaleString()}\n` +
       `Balance: ${settings?.currency || '$'} ${(receipt.balance || 0).toLocaleString()}\n` +
-      `Date: ${format(parseISO(receipt.date), 'MMM dd, yyyy')}\n\n` +
+      `Date: ${safeFormat(receipt.date, 'MMM dd, yyyy')}\n\n` +
       `Thank you for staying with us!`;
     
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -456,6 +456,17 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
 
   const getGuestName = (id: string) => guests.find(g => g.id === id)?.name || 'Unknown Guest';
   const getRoomNumber = (id: string) => rooms.find(r => r.id === id)?.number || 'N/A';
+
+  const safeFormat = (dateStr: any, formatStr: string) => {
+    if (!dateStr) return 'N/A';
+    try {
+      const date = dateStr.toDate ? dateStr.toDate() : (typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr));
+      if (isNaN(date.getTime())) return 'N/A';
+      return format(date, formatStr);
+    } catch (e) {
+      return 'N/A';
+    }
+  };
 
   const filteredBookings = bookings.filter(booking => {
     const guestName = getGuestName(booking.guestId).toLowerCase();
@@ -662,12 +673,12 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 text-sm text-stone-500 font-mono">
                             <div className="flex flex-col">
-                              <span>{format(new Date(booking.checkIn), 'MMM dd')}</span>
+                              <span>{safeFormat(booking.checkIn, 'MMM dd')}</span>
                               <span className="text-[10px] text-stone-400">{booking.checkInTime || '14:00'}</span>
                             </div>
                             <ArrowRight className="w-3 h-3 text-stone-300" />
                             <div className="flex flex-col">
-                              <span>{format(new Date(booking.checkOut), 'MMM dd')}</span>
+                              <span>{safeFormat(booking.checkOut, 'MMM dd')}</span>
                               <span className="text-[10px] text-stone-400">{booking.checkOutTime || '10:00'}</span>
                             </div>
                             <span className="ml-2 text-[10px] text-stone-400 font-sans font-bold uppercase tracking-tighter">

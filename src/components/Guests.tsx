@@ -49,7 +49,16 @@ export default function Guests({ userProfile }: GuestsProps) {
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'guests'), (snap) => {
-      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guest));
+      const list = snap.docs.map(doc => {
+        const data = doc.data() as any;
+        return { 
+          ...data,
+          id: doc.id, 
+          // Handle Firestore Timestamp or string
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+        } as Guest;
+      });
       // Sort: Blacklisted first, then by name
       const sorted = list.sort((a, b) => {
         if (a.isBlacklisted && !b.isBlacklisted) return -1;
@@ -246,7 +255,16 @@ export default function Guests({ userProfile }: GuestsProps) {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-stone-500">
-                      {guest.createdAt ? format(new Date(guest.createdAt), 'MMM dd, yyyy') : 'N/A'}
+                      {(() => {
+                        if (!guest.createdAt) return 'N/A';
+                        try {
+                          const date = new Date(guest.createdAt);
+                          if (isNaN(date.getTime())) return 'N/A';
+                          return format(date, 'MMM dd, yyyy');
+                        } catch (e) {
+                          return 'N/A';
+                        }
+                      })()}
                     </td>
                     {canEdit && (
                       <td className="px-6 py-4 text-right">
