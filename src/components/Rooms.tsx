@@ -17,7 +17,8 @@ import {
   Plus as PlusIcon,
   Minus,
   Trash,
-  Zap
+  Zap,
+  Link
 } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, getDocFromServer, query, where } from 'firebase/firestore';
@@ -77,7 +78,8 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
     description: '',
     maintenanceNotes: '',
     bookingComIcalUrl: '',
-    lekkeSlaapIcalUrl: ''
+    lekkeSlaapIcalUrl: '',
+    externalIcalUrl: ''
   });
 
   useEffect(() => {
@@ -196,7 +198,8 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
         description: '', 
         maintenanceNotes: '',
         bookingComIcalUrl: '',
-        lekkeSlaapIcalUrl: ''
+        lekkeSlaapIcalUrl: '',
+        externalIcalUrl: ''
       });
     } catch (error) {
       handleFirestoreError(error, editingRoom ? OperationType.UPDATE : OperationType.CREATE, path);
@@ -364,7 +367,8 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   description: '', 
                   maintenanceNotes: '',
                   bookingComIcalUrl: '',
-                  lekkeSlaapIcalUrl: ''
+                  lekkeSlaapIcalUrl: '',
+                  externalIcalUrl: ''
                 });
                 setIsModalOpen(true);
               }}
@@ -472,7 +476,11 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                               const response = await fetch(`/api/rooms/${room.id}/sync`, { method: 'POST' });
                               const data = await response.json();
                               if (data.success) {
-                                alert(`Sync successful! Imported ${data.newBookingsCount} new bookings.`);
+                                let message = `Sync successful! Imported ${data.newBookingsCount} new bookings.`;
+                                if (data.errors && data.errors.length > 0) {
+                                  message += `\n\nSome sources had issues:\n- ${data.errors.join('\n- ')}`;
+                                }
+                                alert(message);
                               } else {
                                 alert(`Sync failed: ${data.message || 'Unknown error'}`);
                               }
@@ -501,6 +509,19 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                     {userProfile?.role === 'admin' && (
                       <button
                         onClick={() => {
+                          const exportUrl = `${window.location.origin}/api/rooms/${room.id}/export.ics`;
+                          navigator.clipboard.writeText(exportUrl);
+                          alert('Export link copied to clipboard!');
+                        }}
+                        className="text-[10px] font-bold uppercase tracking-wider text-stone-600 hover:text-stone-700 flex items-center gap-1 transition-colors p-1.5 hover:bg-stone-100 rounded-lg"
+                        title="Copy iCal Export Link"
+                      >
+                        <Link className="w-3 h-3" /> Export Link
+                      </button>
+                    )}
+                    {userProfile?.role === 'admin' && (
+                      <button
+                        onClick={() => {
                           setEditingRoom(room);
                           setFormData({
                             number: room.number,
@@ -513,7 +534,8 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                             description: room.description || '',
                             maintenanceNotes: room.maintenanceNotes || '',
                             bookingComIcalUrl: room.bookingComIcalUrl || '',
-                            lekkeSlaapIcalUrl: room.lekkeSlaapIcalUrl || ''
+                            lekkeSlaapIcalUrl: room.lekkeSlaapIcalUrl || '',
+                            externalIcalUrl: room.externalIcalUrl || ''
                           });
                           setIsModalOpen(true);
                         }}
@@ -905,6 +927,19 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                       className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all text-xs"
                       placeholder="https://www.lekkeslaap.co.za/ical/..."
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">External iCal URL (e.g. Stay@Edison)</label>
+                    <input
+                      type="url"
+                      value={formData.externalIcalUrl}
+                      onChange={(e) => setFormData({ ...formData, externalIcalUrl: e.target.value })}
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all text-xs"
+                      placeholder="https://example.com/calendar.ics"
+                    />
+                    <p className="text-[9px] text-stone-400 ml-1">
+                      Use the direct .ics export link from your booking system.
+                    </p>
                   </div>
                   {editingRoom && (
                     <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">

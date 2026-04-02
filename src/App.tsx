@@ -21,6 +21,11 @@ import {
   Book,
   StickyNote,
   Key,
+  Database,
+  Building2,
+  Globe,
+  Palette,
+  MapPin,
   ChevronDown,
   ChevronRight,
   Contact
@@ -63,14 +68,14 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [settingsLoading, setSettingsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('guests');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [staff, setStaff] = useState<StaffType[]>([]);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState<string[]>(['Operations', 'Management', 'Preferences', 'Support']);
+  const [collapsedSections, setCollapsedSections] = useState<string[]>(['Operations', 'Management', 'Preferences', 'Support', 'Settings']);
 
   const toggleSection = (title: string) => {
     setCollapsedSections(prev => 
@@ -284,12 +289,6 @@ export default function App() {
     }
   ] : [
     {
-      title: 'Dashboard',
-      items: [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      ]
-    },
-    {
       title: 'Operations',
       items: [
         { id: 'guests', label: 'Guests', icon: Users },
@@ -303,6 +302,18 @@ export default function App() {
         { id: 'message-staff', label: 'Message', icon: MessageCircle, onClick: () => setIsStaffModalOpen(true) },
       ]
     },
+    ...(userProfile?.role === 'admin' || userProfile?.role === 'manager' ? [{
+      title: 'Management',
+      items: [
+        { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+        { id: 'staff', label: 'Staff', icon: Users },
+        { id: 'cashbook', label: 'Cashbook', icon: Wallet },
+        { id: 'diary', label: 'Diary', icon: Book },
+        { id: 'contacts', label: 'Contacts', icon: Contact },
+        { id: 'password-safe', label: 'Password Safe', icon: Key },
+        { id: 'sticky-notes', label: 'Sticky Notes', icon: StickyNote },
+      ]
+    }] : []),
     {
       title: 'Preferences',
       items: [
@@ -315,17 +326,16 @@ export default function App() {
         { id: 'support', label: 'Support', icon: LifeBuoy },
       ]
     },
-    ...(userProfile?.role === 'admin' ? [{
-      title: 'Management',
+    ...(userProfile?.role === 'admin' || userProfile?.role === 'manager' ? [{
+      title: 'Settings',
       items: [
-        { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-        { id: 'staff', label: 'Staff', icon: Users },
-        { id: 'cashbook', label: 'Cashbook', icon: Wallet },
-        { id: 'diary', label: 'Diary', icon: Book },
-        { id: 'contacts', label: 'Contacts', icon: Contact },
-        { id: 'password-safe', label: 'Password Safe', icon: Key },
-        { id: 'sticky-notes', label: 'Sticky Notes', icon: StickyNote },
-        { id: 'settings', label: 'Settings', icon: SettingsIcon },
+        { id: 'settings-backup', label: 'Backup & Restore', icon: Database },
+        { id: 'settings-company', label: 'Company Info', icon: Building2 },
+        { id: 'settings-landing', label: 'Landing Page', icon: Globe },
+        { id: 'settings-themes', label: 'Themes', icon: Palette },
+        { id: 'settings-users', label: 'User Management', icon: Users },
+        { id: 'settings-regional', label: 'Regional', icon: MapPin },
+        { id: 'settings-support', label: 'Support Info', icon: LifeBuoy },
       ]
     }] : [])
   ];
@@ -353,7 +363,7 @@ export default function App() {
 
           <nav className="flex-1 px-4 py-4 space-y-6 overflow-y-auto">
             {navSections.map((section) => {
-              const isCollapsible = ['Operations', 'Management', 'Preferences', 'Support'].includes(section.title);
+              const isCollapsible = ['Operations', 'Management', 'Preferences', 'Support', 'Settings'].includes(section.title);
               const isCollapsed = isCollapsible && collapsedSections.includes(section.title);
               
               return (
@@ -472,7 +482,6 @@ export default function App() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-8">
-          {activeTab === 'dashboard' && <Dashboard settings={settings} />}
           {activeTab === 'guests' && <Guests userProfile={userProfile} />}
           {activeTab === 'rooms' && <Rooms settings={settings} userProfile={userProfile} />}
           {activeTab === 'bookings' && <Bookings settings={settings} userProfile={userProfile} />}
@@ -484,11 +493,11 @@ export default function App() {
           
           {activeTab === 'support' && <Support settings={settings} userProfile={userProfile} />}
           
-          {/* Management Tabs - Admin or Landlord */}
-          {(userProfile?.role === 'admin' || userProfile?.role === 'landlord') && (
+          {/* Management Tabs - Admin, Manager or Landlord */}
+          {(userProfile?.role === 'admin' || userProfile?.role === 'manager' || userProfile?.role === 'landlord') && (
             <>
               {activeTab === 'analytics' && <Analytics settings={settings} />}
-              {userProfile?.role === 'admin' && (
+              {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (
                 <>
                   {activeTab === 'cashbook' && <Cashbook settings={settings} userProfile={userProfile} />}
                   {activeTab === 'diary' && <Diary settings={settings} userProfile={userProfile} />}
@@ -496,7 +505,13 @@ export default function App() {
                   {activeTab === 'password-safe' && <PasswordSafe settings={settings} userProfile={userProfile} />}
                   {activeTab === 'sticky-notes' && <StickyNotes userProfile={userProfile} />}
                   {activeTab === 'staff' && <StaffPage settings={settings} userProfile={userProfile} />}
-                  {activeTab === 'settings' && <Settings settings={settings} userProfile={userProfile} />}
+                  {activeTab.startsWith('settings-') && (
+                    <Settings 
+                      settings={settings} 
+                      userProfile={userProfile} 
+                      activeSection={activeTab.replace('settings-', '')} 
+                    />
+                  )}
                 </>
               )}
             </>

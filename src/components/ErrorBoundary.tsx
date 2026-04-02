@@ -20,6 +20,26 @@ export default class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
+  public componentDidMount() {
+    window.addEventListener('unhandledrejection', this.handlePromiseRejection);
+    window.addEventListener('error', this.handleGlobalError);
+  }
+
+  public componentWillUnmount() {
+    window.removeEventListener('unhandledrejection', this.handlePromiseRejection);
+    window.removeEventListener('error', this.handleGlobalError);
+  }
+
+  private handlePromiseRejection = (event: PromiseRejectionEvent) => {
+    console.error('Unhandled promise rejection caught by ErrorBoundary:', event.reason);
+    this.setState({ hasError: true, error: event.reason instanceof Error ? event.reason : new Error(String(event.reason)) });
+  };
+
+  private handleGlobalError = (event: ErrorEvent) => {
+    console.error('Global error caught by ErrorBoundary:', event.error);
+    this.setState({ hasError: true, error: event.error || new Error(event.message) });
+  };
+
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
   }

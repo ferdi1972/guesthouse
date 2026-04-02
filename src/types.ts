@@ -29,6 +29,7 @@ export interface Room {
   maintenanceNotes?: string;
   bookingComIcalUrl?: string;
   lekkeSlaapIcalUrl?: string;
+  externalIcalUrl?: string;
   lastSyncAt?: string;
 }
 

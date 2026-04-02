@@ -18,7 +18,9 @@ import {
   Clock,
   FileSpreadsheet,
   Users,
-  X
+  X,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { doc, setDoc, collection, getDocs, writeBatch, deleteDoc } from 'firebase/firestore';
@@ -51,9 +53,10 @@ const THEMES: { id: AppTheme; label: string }[] = [
 interface SettingsProps {
   settings: SettingsType | null;
   userProfile: UserProfile | null;
+  activeSection?: string;
 }
 
-export default function Settings({ settings, userProfile }: SettingsProps) {
+export default function Settings({ settings, userProfile, activeSection }: SettingsProps) {
   const [formData, setFormData] = useState<SettingsType>({
     companyName: settings?.companyName || '',
     address: settings?.address || '',
@@ -97,6 +100,14 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (sectionId: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
   const [isFactoryResetting, setIsFactoryResetting] = useState(false);
   const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -381,22 +392,29 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif italic text-primary">Settings</h1>
+          <h1 className="text-3xl font-serif italic text-primary">
+            {activeSection ? activeSection.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'Settings'}
+          </h1>
           <p className="text-muted-foreground text-sm">Configure your guesthouse information and preferences.</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Data Management */}
-        {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (
+        {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (activeSection === 'backup' || !activeSection) && (
           <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-border bg-accent/50">
+            <div 
+              className="p-6 border-b border-border bg-accent/50 flex items-center justify-between cursor-pointer hover:bg-accent/70 transition-colors"
+              onClick={() => toggleSection('backup-restore')}
+            >
               <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
                 <Database className="w-5 h-5 text-muted-foreground" /> Data Backup & Restore
               </h3>
+              {collapsedSections['backup-restore'] ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronUp className="w-5 h-5 text-muted-foreground" />}
             </div>
-            <div className="p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {!collapsedSections['backup-restore'] && (
+              <div className="p-8 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Backup */}
                 <div className="flex flex-col items-start justify-between gap-4 p-6 bg-accent/20 rounded-2xl border border-border/50">
                   <div className="space-y-1">
@@ -503,18 +521,25 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
         {/* Backup Scheduling */}
-        <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-border bg-accent/50">
-            <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-muted-foreground" /> Backup Scheduling
-            </h3>
-          </div>
-          <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="space-y-2">
+        {(activeSection === 'backup' || !activeSection) && (
+          <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
+            <div 
+              className="p-6 border-b border-border bg-accent/50 flex items-center justify-between cursor-pointer hover:bg-accent/70 transition-colors"
+              onClick={() => toggleSection('backup-scheduling')}
+            >
+              <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-muted-foreground" /> Backup Scheduling
+              </h3>
+              {collapsedSections['backup-scheduling'] ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronUp className="w-5 h-5 text-muted-foreground" />}
+            </div>
+            {!collapsedSections['backup-scheduling'] && (
+              <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Backup Frequency</label>
               <select
                 value={formData.backupFrequency || 'none'}
@@ -548,13 +573,15 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Last Backup Date</label>
               <div className="px-4 py-3 bg-accent/10 border border-border rounded-xl text-sm font-mono text-primary">
-                {formData.lastBackupDate 
-                  ? new Date(formData.lastBackupDate).toLocaleString() 
-                  : 'Never'}
+                  {formData.lastBackupDate 
+                    ? new Date(formData.lastBackupDate).toLocaleString() 
+                    : 'Never'}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
+      )}
 
         {/* Factory Reset Confirmation Modal */}
         {showFactoryResetConfirm && (
@@ -634,15 +661,20 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
         )}
 
         {/* Company Info */}
-        {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (
+        {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (activeSection === 'company' || !activeSection) && (
           <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-border bg-accent/50">
+            <div 
+              className="p-6 border-b border-border bg-accent/50 flex items-center justify-between cursor-pointer hover:bg-accent/70 transition-colors"
+              onClick={() => toggleSection('company-info')}
+            >
               <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-muted-foreground" /> Company Information
               </h3>
+              {collapsedSections['company-info'] ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronUp className="w-5 h-5 text-muted-foreground" />}
             </div>
-            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
+            {!collapsedSections['company-info'] && (
+              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Guesthouse Name</label>
                 <input
                   required
@@ -705,19 +737,25 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
         {/* Landing Page Settings */}
-        {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (
+        {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (activeSection === 'landing' || !activeSection) && (
           <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-border bg-accent/50">
+            <div 
+              className="p-6 border-b border-border bg-accent/50 flex items-center justify-between cursor-pointer hover:bg-accent/70 transition-colors"
+              onClick={() => toggleSection('landing-page')}
+            >
               <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
                 <Globe className="w-5 h-5 text-muted-foreground" /> Landing Page Customization
               </h3>
+              {collapsedSections['landing-page'] ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronUp className="w-5 h-5 text-muted-foreground" />}
             </div>
-            <div className="p-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {!collapsedSections['landing-page'] && (
+              <div className="p-8 space-y-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Landing Page Title</label>
                   <input
@@ -790,18 +828,25 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
         {/* Preferences */}
-        <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-border bg-accent/50">
-            <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
-              <Palette className="w-5 h-5 text-muted-foreground" /> Theme & Appearance
-            </h3>
-          </div>
-          <div className="p-8 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {(activeSection === 'themes' || !activeSection) && (
+          <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
+            <div 
+              className="p-6 border-b border-border bg-accent/50 flex items-center justify-between cursor-pointer hover:bg-accent/70 transition-colors"
+              onClick={() => toggleSection('themes')}
+            >
+              <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
+                <Palette className="w-5 h-5 text-muted-foreground" /> Theme & Appearance
+              </h3>
+              {collapsedSections['themes'] ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronUp className="w-5 h-5 text-muted-foreground" />}
+            </div>
+            {!collapsedSections['themes'] && (
+              <div className="p-8 space-y-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">My Personal Theme</label>
                 <select
@@ -833,25 +878,37 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
               )}
             </div>
           </div>
-        </div>
+        )}
+      </div>
+    )}
 
         {/* User Management */}
-        {userProfile?.role === 'admin' && (
+        {userProfile?.role === 'admin' && (activeSection === 'users' || !activeSection) && (
           <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-border bg-accent/50 flex items-center justify-between">
+            <div 
+              className="p-6 border-b border-border bg-accent/50 flex items-center justify-between cursor-pointer hover:bg-accent/70 transition-colors"
+              onClick={() => toggleSection('users')}
+            >
               <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
                 <Users className="w-5 h-5 text-muted-foreground" /> User Management
               </h3>
-              <button 
-                type="button"
-                onClick={fetchUsers}
-                className="text-xs font-bold uppercase tracking-widest text-primary hover:opacity-70"
-              >
-                Refresh
-              </button>
+              <div className="flex items-center gap-4">
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fetchUsers();
+                  }}
+                  className="text-xs font-bold uppercase tracking-widest text-primary hover:opacity-70"
+                >
+                  Refresh
+                </button>
+                {collapsedSections['users'] ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronUp className="w-5 h-5 text-muted-foreground" />}
+              </div>
             </div>
-            <div className="p-8">
-              {isLoadingUsers ? (
+            {!collapsedSections['users'] && (
+              <div className="p-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                {isLoadingUsers ? (
                 <div className="flex justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
@@ -920,134 +977,148 @@ export default function Settings({ settings, userProfile }: SettingsProps) {
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
         {/* Regional & Financial */}
-        {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (
-          <>
-            <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-border bg-accent/50">
-                <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-muted-foreground" /> Regional & Financial
-                </h3>
-              </div>
-              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+        {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (activeSection === 'regional' || !activeSection) && (
+          <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
+            <div 
+              className="p-6 border-b border-border bg-accent/50 flex items-center justify-between cursor-pointer hover:bg-accent/70 transition-colors"
+              onClick={() => toggleSection('regional')}
+            >
+              <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
+                <Globe className="w-5 h-5 text-muted-foreground" /> Regional & Financial
+              </h3>
+              {collapsedSections['regional'] ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronUp className="w-5 h-5 text-muted-foreground" />}
+            </div>
+            {!collapsedSections['regional'] && (
+              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Currency Symbol</label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Currency Symbol</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                    className="w-full pl-11 pr-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                    placeholder="USD, €, R, etc."
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Tax Rate (%)</label>
+                <div className="relative">
+                  <Percent className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="number"
+                    value={formData.taxRate}
+                    onChange={(e) => setFormData({ ...formData, taxRate: Number(e.target.value) })}
+                    className="w-full pl-11 pr-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+        {/* Support Information */}
+        {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (activeSection === 'support' || !activeSection) && (
+          <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
+            <div 
+              className="p-6 border-b border-border bg-accent/50 flex items-center justify-between cursor-pointer hover:bg-accent/70 transition-colors"
+              onClick={() => toggleSection('support')}
+            >
+              <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
+                <Users className="w-5 h-5 text-muted-foreground" /> Support Information
+              </h3>
+              {collapsedSections['support'] ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronUp className="w-5 h-5 text-muted-foreground" />}
+            </div>
+            {!collapsedSections['support'] && (
+              <div className="p-8 space-y-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex flex-col md:flex-row gap-8">
+                <div className="w-full md:w-1/3 space-y-4">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Support Logo</label>
+                  <div className="relative group">
+                    <div className="w-full aspect-square rounded-2xl bg-accent/30 border-2 border-dashed border-border flex flex-col items-center justify-center overflow-hidden transition-all group-hover:border-primary/50">
+                      {formData.supportLogo ? (
+                        <img src={formData.supportLogo} alt="Support Logo" className="w-full h-full object-contain p-4" />
+                      ) : (
+                        <div className="text-center p-4">
+                          <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-[10px] text-muted-foreground font-medium">Upload Logo</p>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                    {formData.supportLogo && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, supportLogo: '' })}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-rose-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-700 transition-all"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic text-center">Recommended: Square PNG or SVG, max 1MB.</p>
+                </div>
+
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Developer Name</label>
                     <input
                       type="text"
-                      value={formData.currency}
-                      onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                      className="w-full pl-11 pr-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
-                      placeholder="USD, €, R, etc."
+                      value={formData.supportName || ''}
+                      onChange={(e) => setFormData({ ...formData, supportName: e.target.value })}
+                      className="w-full px-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                      placeholder="e.g. John Doe"
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Tax Rate (%)</label>
-                  <div className="relative">
-                    <Percent className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Support Company</label>
                     <input
-                      type="number"
-                      value={formData.taxRate}
-                      onChange={(e) => setFormData({ ...formData, taxRate: Number(e.target.value) })}
-                      className="w-full pl-11 pr-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
-                      placeholder="0.00"
+                      type="text"
+                      value={formData.supportCompany || ''}
+                      onChange={(e) => setFormData({ ...formData, supportCompany: e.target.value })}
+                      className="w-full px-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                      placeholder="e.g. Tech Solutions Ltd"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Support Phone</label>
+                    <input
+                      type="tel"
+                      value={formData.supportPhone || ''}
+                      onChange={(e) => setFormData({ ...formData, supportPhone: e.target.value })}
+                      className="w-full px-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                      placeholder="+27 12 345 6789"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Support Email</label>
+                    <input
+                      type="email"
+                      value={formData.supportEmail || ''}
+                      onChange={(e) => setFormData({ ...formData, supportEmail: e.target.value })}
+                      className="w-full px-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                      placeholder="support@techsolutions.com"
                     />
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-border bg-accent/50">
-                <h3 className="font-serif italic text-xl text-primary flex items-center gap-2">
-                  <Users className="w-5 h-5 text-muted-foreground" /> Support Information
-                </h3>
-              </div>
-              <div className="p-8 space-y-8">
-                <div className="flex flex-col md:flex-row gap-8">
-                  <div className="w-full md:w-1/3 space-y-4">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Support Logo</label>
-                    <div className="relative group">
-                      <div className="w-full aspect-square rounded-2xl bg-accent/30 border-2 border-dashed border-border flex flex-col items-center justify-center overflow-hidden transition-all group-hover:border-primary/50">
-                        {formData.supportLogo ? (
-                          <img src={formData.supportLogo} alt="Support Logo" className="w-full h-full object-contain p-4" />
-                        ) : (
-                          <div className="text-center p-4">
-                            <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                            <p className="text-[10px] text-muted-foreground font-medium">Upload Logo</p>
-                          </div>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoUpload}
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                        />
-                      </div>
-                      {formData.supportLogo && (
-                        <button
-                          type="button"
-                          onClick={() => setFormData({ ...formData, supportLogo: '' })}
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-rose-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-700 transition-all"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground italic text-center">Recommended: Square PNG or SVG, max 1MB.</p>
-                  </div>
-
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Developer Name</label>
-                      <input
-                        type="text"
-                        value={formData.supportName || ''}
-                        onChange={(e) => setFormData({ ...formData, supportName: e.target.value })}
-                        className="w-full px-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
-                        placeholder="e.g. John Doe"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Support Company</label>
-                      <input
-                        type="text"
-                        value={formData.supportCompany || ''}
-                        onChange={(e) => setFormData({ ...formData, supportCompany: e.target.value })}
-                        className="w-full px-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
-                        placeholder="e.g. Tech Solutions Ltd"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Support Phone</label>
-                      <input
-                        type="tel"
-                        value={formData.supportPhone || ''}
-                        onChange={(e) => setFormData({ ...formData, supportPhone: e.target.value })}
-                        className="w-full px-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
-                        placeholder="+27 12 345 6789"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Support Email</label>
-                      <input
-                        type="email"
-                        value={formData.supportEmail || ''}
-                        onChange={(e) => setFormData({ ...formData, supportEmail: e.target.value })}
-                        className="w-full px-4 py-3 bg-accent/30 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
-                        placeholder="support@techsolutions.com"
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
-            </div>
-          </>
+            )}
+          </div>
         )}
 
         <div className="flex justify-end">

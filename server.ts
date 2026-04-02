@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import admin from "firebase-admin";
+import { getFirestore } from "firebase-admin/firestore";
 import ical from "ical-generator";
 import nodeIcal from "node-ical";
 import axios from "axios";
@@ -34,14 +35,17 @@ async function startServer() {
 
   let firestore: admin.firestore.Firestore;
   try {
-    firestore = firebaseConfig.firestoreDatabaseId 
-      ? admin.firestore(firebaseConfig.firestoreDatabaseId)
-      : admin.firestore();
-    console.log(`Firestore initialized with database: ${firebaseConfig.firestoreDatabaseId || "(default)"}`);
+    const dbId = firebaseConfig.firestoreDatabaseId;
+    if (dbId && dbId !== "(default)") {
+      firestore = getFirestore(admin.app(), dbId);
+      console.log(`Firestore initialized with named database: ${dbId}`);
+    } else {
+      firestore = getFirestore(admin.app());
+      console.log("Firestore initialized with default database");
+    }
   } catch (fsError) {
     console.error("Failed to initialize Firestore:", fsError);
-    // Fallback to default if specific database fails
-    firestore = admin.firestore();
+    firestore = getFirestore(admin.app());
   }
 
   app.use(express.json());
@@ -83,9 +87,9 @@ async function startServer() {
       res.setHeader("Content-Type", "text/calendar; charset=utf-8");
       res.setHeader("Content-Disposition", `attachment; filename="room_${roomData?.number}.ics"`);
       res.send(calendar.toString());
-    } catch (error) {
+    } catch (error: any) {
       console.error("iCal Export Error:", error);
-      res.status(500).send("Error generating iCal");
+      res.status(500).json({ success: false, message: error.message || "Error generating iCal" });
     }
   });
 
@@ -105,7 +109,8 @@ async function startServer() {
       const roomData = roomDoc.data();
       const urls = [
         { url: roomData?.bookingComIcalUrl, source: "Booking.com" },
-        { url: roomData?.lekkeSlaapIcalUrl, source: "LekkeSlaap.co.za" }
+        { url: roomData?.lekkeSlaapIcalUrl, source: "LekkeSlaap.co.za" },
+        { url: roomData?.externalIcalUrl, source: "External" }
       ].filter(item => item.url);
       
       console.log(`Found ${urls.length} URLs to sync`);
@@ -115,6 +120,7 @@ async function startServer() {
       
       let newBookingsCount = 0;
       const now = new Date();
+      const syncErrors: string[] = [];
       
       for (const { url, source } of urls) {
         console.log(`Fetching iCal from ${source}: ${url}`);
@@ -125,7 +131,25 @@ async function startServer() {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
           });
-          const data = nodeIcal.parseICS(response.data);
+          
+          console.log(`Response status from ${source}: ${response.status}`);
+          if (!response.data || typeof response.data !== 'string') {
+            syncErrors.push(`${source}: Invalid response data`);
+            continue;
+          }
+          
+          if (response.data.trim().startsWith('<!DOCTYPE html>') || response.data.trim().startsWith('<html')) {
+            syncErrors.push(`${source}: URL returned a web page instead of iCal data. Please ensure you are using the direct iCal export link.`);
+            continue;
+          }
+          
+          let data;
+          try {
+            data = nodeIcal.parseICS(response.data);
+          } catch (err) {
+            syncErrors.push(`${source}: Failed to parse iCal data`);
+            continue;
+          }
           
           console.log(`Parsed ${Object.keys(data).length} items from ${source}`);
           
@@ -185,19 +209,26 @@ async function startServer() {
             }
           }
         } catch (fetchError: any) {
-          console.error(`Error fetching/parsing iCal from ${source}:`, fetchError.message);
+          console.error(`Error syncing from ${source}:`, fetchError.message);
+          syncErrors.push(`${source}: ${fetchError.message}`);
         }
       }
       
+      console.log(`Sync complete for room ${roomId}. New bookings: ${newBookingsCount}`);
+      
+      // Update lastSyncAt for the room
       await dbInstance.collection("rooms").doc(roomId).update({
         lastSyncAt: now.toISOString()
       });
       
-      console.log(`Sync complete for room ${roomId}. New bookings: ${newBookingsCount}`);
-      res.json({ success: true, newBookingsCount });
-    } catch (error) {
+      res.json({ 
+        success: true, 
+        newBookingsCount,
+        errors: syncErrors.length > 0 ? syncErrors : undefined
+      });
+    } catch (error: any) {
       console.error("iCal Sync Error:", error);
-      res.status(500).send("Error syncing iCal");
+      res.status(500).json({ success: false, message: error.message || "Error syncing iCal" });
     }
   });
 

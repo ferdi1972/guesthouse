@@ -34,6 +34,7 @@
         "maintenanceNotes": { "type": "string" },
         "bookingComIcalUrl": { "type": "string", "description": "iCal URL from Booking.com" },
         "lekkeSlaapIcalUrl": { "type": "string", "description": "iCal URL from LekkeSlaap.co.za" },
+        "externalIcalUrl": { "type": "string", "description": "Generic external iCal URL" },
         "lastSyncAt": { "type": "string", "format": "date-time" }
       },
       "required": ["number", "singleRate", "doubleRate", "hourlyRate"]
