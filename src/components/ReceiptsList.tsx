@@ -11,15 +11,16 @@ import {
   ExternalLink,
   X,
   Printer,
-  Filter
+  Filter,
+  Edit2,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { Receipt, Settings, UserProfile } from '../types';
 import { format, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';
-import { Trash2 } from 'lucide-react';
-import { deleteDoc, doc } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 import { auth } from '../firebase';
 
@@ -42,6 +43,8 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
   });
   const [showFilters, setShowFilters] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+  const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
+  const [editFormData, setEditFormData] = useState<Partial<Receipt>>({});
 
   const [receiptToDelete, setReceiptToDelete] = useState<string | null>(null);
 
@@ -52,6 +55,60 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `receipts/${id}`);
     }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingReceipt) return;
+
+    try {
+      const updatedData = {
+        ...editFormData,
+        notes: editFormData.notes || '',
+        paymentMethod: editFormData.paymentMethod || '',
+        balance: (editFormData.totalAmount || 0) - (editFormData.paidAmount || 0)
+      };
+      await updateDoc(doc(db, 'receipts', editingReceipt.id), updatedData);
+      setEditingReceipt(null);
+      setEditFormData({});
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `receipts/${editingReceipt.id}`);
+    }
+  };
+
+  const addEditItem = () => {
+    setEditFormData(prev => ({
+      ...prev,
+      items: [...(prev.items || []), { description: '', amount: 0 }]
+    }));
+  };
+
+  const removeEditItem = (index: number) => {
+    setEditFormData(prev => {
+      const newItems = [...(prev.items || [])];
+      newItems.splice(index, 1);
+      const newTotal = newItems.reduce((sum, item) => sum + item.amount, 0);
+      return {
+        ...prev,
+        items: newItems,
+        totalAmount: newTotal,
+        amount: newTotal
+      };
+    });
+  };
+
+  const updateEditItem = (index: number, field: 'description' | 'amount', value: string | number) => {
+    setEditFormData(prev => {
+      const newItems = [...(prev.items || [])];
+      newItems[index] = { ...newItems[index], [field]: value };
+      const newTotal = newItems.reduce((sum, item) => sum + item.amount, 0);
+      return {
+        ...prev,
+        items: newItems,
+        totalAmount: newTotal,
+        amount: newTotal
+      };
+    });
   };
 
   useEffect(() => {
@@ -331,6 +388,27 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                         >
                           <ExternalLink className="w-4 h-4" />
                         </button>
+                        {userProfile?.role === 'admin' && (
+                          <button
+                            onClick={() => {
+                              setEditingReceipt(receipt);
+                              setEditFormData({
+                                guestName: receipt.guestName,
+                                date: receipt.date,
+                                items: receipt.items,
+                                totalAmount: receipt.totalAmount || receipt.amount,
+                                paidAmount: receipt.paidAmount || 0,
+                                status: receipt.status,
+                                paymentMethod: receipt.paymentMethod || '',
+                                notes: receipt.notes || ''
+                              });
+                            }}
+                            className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-all"
+                            title="Edit Receipt"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleShareWhatsApp(receipt)}
                           className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
@@ -405,6 +483,27 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                     >
                       <ExternalLink className="w-4 h-4" />
                     </button>
+                    {userProfile?.role === 'admin' && (
+                      <button
+                        onClick={() => {
+                          setEditingReceipt(receipt);
+                          setEditFormData({
+                            guestName: receipt.guestName,
+                            date: receipt.date,
+                            items: receipt.items,
+                            totalAmount: receipt.totalAmount || receipt.amount,
+                            paidAmount: receipt.paidAmount || 0,
+                            status: receipt.status,
+                            paymentMethod: receipt.paymentMethod || '',
+                            notes: receipt.notes || ''
+                          });
+                        }}
+                        className="p-2.5 bg-stone-100 text-stone-600 rounded-xl transition-all"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleShareWhatsApp(receipt)}
                       className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl transition-all"
@@ -435,6 +534,163 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
           )}
         </div>
       </div>
+
+      {/* Edit Receipt Modal */}
+      {editingReceipt && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col">
+            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50 shrink-0">
+              <h3 className="font-serif italic text-2xl text-stone-900">Edit Receipt</h3>
+              <button 
+                onClick={() => setEditingReceipt(null)}
+                className="p-2 text-stone-400 hover:text-stone-900 rounded-full hover:bg-stone-100 transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Guest Name</label>
+                  <input
+                    required
+                    type="text"
+                    value={editFormData.guestName || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, guestName: e.target.value })}
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Date</label>
+                  <input
+                    required
+                    type="date"
+                    value={editFormData.date ? editFormData.date.split('T')[0] : ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, date: e.target.value })}
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Status</label>
+                  <select
+                    value={editFormData.status || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as any })}
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                  >
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="CheckedIn">Checked In</option>
+                    <option value="CheckedOut">Checked Out</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Payment Method</label>
+                  <input
+                    type="text"
+                    value={editFormData.paymentMethod || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, paymentMethod: e.target.value })}
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                    placeholder="e.g. Cash, Card, EFT"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Items</h4>
+                  <button
+                    type="button"
+                    onClick={addEditItem}
+                    className="text-xs font-bold text-stone-900 flex items-center gap-1 hover:opacity-70"
+                  >
+                    <Plus className="w-3 h-3" /> Add Item
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {editFormData.items?.map((item, idx) => (
+                    <div key={idx} className="flex gap-3 items-start">
+                      <input
+                        required
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => updateEditItem(idx, 'description', e.target.value)}
+                        className="flex-1 px-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-stone-900 outline-none"
+                        placeholder="Description"
+                      />
+                      <div className="relative w-32">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">{settings?.currency || '$'}</span>
+                        <input
+                          required
+                          type="number"
+                          value={item.amount}
+                          onChange={(e) => updateEditItem(idx, 'amount', Number(e.target.value))}
+                          className="w-full pl-8 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-stone-900 outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeEditItem(idx)}
+                        className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-stone-100">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Paid Amount</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">{settings?.currency || '$'}</span>
+                    <input
+                      required
+                      type="number"
+                      value={editFormData.paidAmount || 0}
+                      onChange={(e) => setEditFormData({ ...editFormData, paidAmount: Number(e.target.value) })}
+                      className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Total Amount</label>
+                  <div className="px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl font-mono font-bold text-stone-900">
+                    {settings?.currency || '$'} {(editFormData.totalAmount || 0).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Notes</label>
+                <textarea
+                  value={editFormData.notes || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all min-h-[80px] resize-none"
+                  placeholder="Additional notes..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingReceipt(null)}
+                  className="flex-1 px-6 py-3 bg-stone-100 text-stone-600 rounded-xl font-bold hover:bg-stone-200 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-6 py-3 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all shadow-lg"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {receiptToDelete && (
