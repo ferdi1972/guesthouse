@@ -9,12 +9,14 @@ import {
   Clock,
   Hotel,
   Wallet,
-  CheckCircle2
+  CheckCircle2,
+  Bell,
+  AlertCircle
 } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, where, limit, orderBy } from 'firebase/firestore';
-import { Guest, Room, Booking, CashbookEntry, Settings } from '../types';
-import { format, isToday, isAfter, startOfMonth, endOfMonth } from 'date-fns';
+import { Guest, Room, Booking, CashbookEntry, Settings, Reminder } from '../types';
+import { format, isToday, isAfter, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
@@ -31,6 +33,7 @@ export default function Dashboard({ settings }: DashboardProps) {
     pendingCollections: 0,
   });
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [upcomingReminders, setUpcomingReminders] = useState<Reminder[]>([]);
   const [guests, setGuests] = useState<Record<string, Guest>>({});
 
   useEffect(() => {
@@ -85,11 +88,26 @@ export default function Dashboard({ settings }: DashboardProps) {
       handleFirestoreError(error, OperationType.GET, 'cashbook');
     });
 
+    const unsubReminders = onSnapshot(
+      query(collection(db, 'reminders'), orderBy('dueDate', 'asc')), 
+      (snap) => {
+        const pending = snap.docs
+          .map(doc => ({ id: doc.id, ...doc.data() } as Reminder))
+          .filter(r => r.status === 'pending')
+          .slice(0, 3);
+        setUpcomingReminders(pending);
+      }, 
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, 'reminders');
+      }
+    );
+
     return () => {
       unsubGuests();
       unsubRooms();
       unsubBookings();
       unsubCash();
+      unsubReminders();
     };
   }, []);
 
@@ -227,6 +245,43 @@ export default function Dashboard({ settings }: DashboardProps) {
               </button>
             </div>
             <Hotel className="absolute -bottom-4 -right-4 w-32 h-32 text-white/5 rotate-12 group-hover:rotate-0 transition-transform duration-700" />
+          </div>
+
+          {/* Upcoming Reminders */}
+          <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif italic text-lg text-stone-900">Upcoming Reminders</h3>
+              <Bell className="w-4 h-4 text-stone-400" />
+            </div>
+            <div className="space-y-3">
+              {upcomingReminders.length === 0 ? (
+                <p className="text-xs text-stone-400 italic py-4 text-center">No pending reminders.</p>
+              ) : (
+                upcomingReminders.map((reminder) => (
+                  <div key={reminder.id} className="p-3 bg-stone-50 rounded-xl border border-stone-100 group cursor-pointer hover:border-stone-200 transition-all" onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'reminders' }))}>
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full mt-1.5 shrink-0",
+                        reminder.priority === 'high' ? "bg-rose-500" :
+                        reminder.priority === 'medium' ? "bg-amber-500" : "bg-blue-500"
+                      )} />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-stone-900 truncate">{reminder.title}</p>
+                        <p className="text-[10px] text-stone-500 mt-0.5">
+                          {format(parseISO(reminder.dueDate), 'MMM d')} at {reminder.dueTime || '09:00'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'reminders' }))}
+                className="w-full py-2 text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors border-t border-stone-100 mt-2"
+              >
+                View All Reminders
+              </button>
+            </div>
           </div>
 
           <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">

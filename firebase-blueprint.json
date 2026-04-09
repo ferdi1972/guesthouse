@@ -284,6 +284,24 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "category", "authorId", "createdAt"]
+    },
+    "Reminder": {
+      "title": "Reminder",
+      "description": "An important event or task reminder for admins.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date" },
+        "dueTime": { "type": "string", "format": "time" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "dueDate", "priority", "status", "authorId", "createdAt"]
     }
   },
   "firestore": {
@@ -303,6 +321,7 @@
     "diary": { "schema": "DiaryEntry", "description": "Admin diary entries" },
     "stickyNotes": { "schema": "StickyNote", "description": "Quick admin sticky notes" },
     "passwordSafe": { "schema": "PasswordEntry", "description": "Secure password storage for admins" },
-    "contacts": { "schema": "Contact", "description": "Business contacts and suppliers" }
+    "contacts": { "schema": "Contact", "description": "Business contacts and suppliers" },
+    "reminders": { "schema": "Reminder", "description": "Important events and tasks reminders" }
   }
 }

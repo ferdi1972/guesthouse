@@ -211,3 +211,16 @@ export interface Contact {
   authorId: string;
   createdAt: string;
 }
+
+export interface Reminder {
+  id: string;
+  title: string;
+  description?: string;
+  dueDate: string;
+  dueTime?: string;
+  priority: 'low' | 'medium' | 'high';
+  status: 'pending' | 'completed';
+  authorId: string;
+  authorName?: string;
+  createdAt: string;
+}

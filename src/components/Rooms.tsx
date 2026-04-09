@@ -275,16 +275,16 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
               </span>
               <div className="mt-1 space-y-1">
                 {dayBookings.map((b, idx) => (
-                  <div 
-                    key={idx} 
-                      className={cn(
-                        "text-[9px] px-1.5 py-0.5 rounded truncate font-medium",
-                        b.status === 'CheckedIn' ? "bg-emerald-100 text-emerald-700" : 
-                        b.status === 'External' ? "bg-purple-100 text-purple-700" :
-                        "bg-blue-100 text-blue-700"
-                      )}
-                      title={`${b.status === 'External' ? `External: ${b.externalSource}` : (guests[b.guestId]?.name || 'Guest')} (${b.status})`}
-                    >
+                      <div 
+                        key={idx} 
+                        className={cn(
+                          "text-[9px] px-1.5 py-0.5 rounded truncate font-medium",
+                          b.status === 'CheckedIn' ? "bg-emerald-600 text-white shadow-sm" : 
+                          b.status === 'External' ? "bg-purple-100 text-purple-700 border border-purple-200" :
+                          "bg-green-100 text-green-800 border border-green-200"
+                        )}
+                        title={`${b.status === 'External' ? `External: ${b.externalSource}` : (guests[b.guestId]?.name || 'Guest')} (${b.status})`}
+                      >
                       {b.status === 'External' ? `Ext: ${b.externalSource}` : (guests[b.guestId]?.name || 'Guest')}
                   </div>
                 ))}
@@ -751,11 +751,11 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
             </div>
             <div className="p-6 bg-stone-50 border-t border-stone-100 flex items-center gap-6">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-blue-100 border border-blue-200" />
+                <div className="w-3 h-3 rounded bg-green-100 border border-green-200" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Confirmed</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-emerald-100 border border-emerald-200" />
+                <div className="w-3 h-3 rounded bg-emerald-600 border border-emerald-700" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Checked In</span>
               </div>
               <div className="flex items-center gap-2">

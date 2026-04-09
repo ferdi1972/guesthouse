@@ -28,7 +28,8 @@ import {
   MapPin,
   ChevronDown,
   ChevronRight,
-  Contact
+  Contact,
+  Bell
 } from 'lucide-react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
@@ -56,6 +57,7 @@ import Schedule from './components/Schedule';
 import Diary from './components/Diary';
 import Contacts from './components/Contacts';
 import StickyNotes from './components/StickyNotes';
+import Reminders from './components/Reminders';
 import PasswordSafe from './components/PasswordSafe';
 import BackupChecker from './components/BackupChecker';
 import CheckoutAlert from './components/CheckoutAlert';
@@ -343,6 +345,7 @@ export default function App() {
         { id: 'staff', label: 'Staff', icon: Users },
         { id: 'cashbook', label: 'Cashbook', icon: Wallet },
         { id: 'diary', label: 'Diary', icon: Book },
+        { id: 'reminders', label: 'Reminders', icon: Bell },
         { id: 'contacts', label: 'Contacts', icon: Contact },
         { id: 'password-safe', label: 'Password Safe', icon: Key },
         { id: 'sticky-notes', label: 'Sticky Notes', icon: StickyNote },
@@ -542,6 +545,7 @@ export default function App() {
                 <>
                   {activeTab === 'cashbook' && <Cashbook settings={settings} userProfile={userProfile} />}
                   {activeTab === 'diary' && <Diary settings={settings} userProfile={userProfile} />}
+                  {activeTab === 'reminders' && <Reminders settings={settings} userProfile={userProfile} />}
                   {activeTab === 'contacts' && <Contacts />}
                   {activeTab === 'password-safe' && <PasswordSafe settings={settings} userProfile={userProfile} />}
                   {activeTab === 'sticky-notes' && <StickyNotes userProfile={userProfile} />}

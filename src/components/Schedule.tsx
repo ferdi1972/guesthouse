@@ -143,7 +143,7 @@ export default function Schedule() {
                 className={cn(
                   "min-h-[120px] p-2 border-r border-b border-stone-100 transition-all cursor-pointer group relative",
                   !isCurrentMonth && "bg-stone-50/30",
-                  isTodayDate && "bg-stone-50/80",
+                  isTodayDate && "bg-blue-50/30 border border-blue-100",
                   "hover:bg-stone-50/50"
                 )}
               >
@@ -151,7 +151,7 @@ export default function Schedule() {
                   <span className={cn(
                     "text-xs font-mono font-medium w-6 h-6 flex items-center justify-center rounded-full transition-colors",
                     !isCurrentMonth ? "text-stone-300" : "text-stone-500",
-                    isTodayDate && "bg-stone-900 text-white font-bold"
+                    isTodayDate && "text-blue-600 font-bold"
                   )}>
                     {format(day, 'd')}
                   </span>
@@ -164,15 +164,16 @@ export default function Schedule() {
 
                 <div className="space-y-1 overflow-hidden">
                   {dayBookings.slice(0, 3).map((b) => (
-                    <div 
-                      key={b.id}
-                      className={cn(
-                        "text-[10px] px-1.5 py-1 rounded-md border truncate transition-all",
-                        b.status === 'CheckedIn' ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
-                        b.status === 'CheckedOut' ? "bg-stone-50 text-stone-500 border-stone-100" :
-                        "bg-blue-50 text-blue-700 border-blue-100"
-                      )}
-                    >
+                      <div 
+                        key={b.id}
+                        className={cn(
+                          "text-[10px] px-1.5 py-1 rounded-md border truncate transition-all font-medium",
+                          b.status === 'CheckedIn' ? "bg-emerald-600 text-white border-emerald-700 shadow-sm" :
+                          b.status === 'External' ? "bg-purple-100 text-purple-700 border-purple-200" :
+                          b.status === 'CheckedOut' ? "bg-stone-50 text-stone-500 border-stone-100" :
+                          "bg-green-100 text-green-800 border-green-200"
+                        )}
+                      >
                       <span className="font-bold mr-1">R{getRoomNumber(b.roomId)}</span>
                       {getGuestName(b.guestId)}
                     </div>
@@ -186,12 +187,32 @@ export default function Schedule() {
 
                 {isTodayDate && (
                   <div className="absolute bottom-1 right-1">
-                    <div className="w-1.5 h-1.5 bg-stone-900 rounded-full animate-pulse" />
+                    <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" />
                   </div>
                 )}
               </div>
             );
           })}
+        </div>
+        
+        {/* Legend */}
+        <div className="p-6 bg-stone-50 border-t border-stone-100 flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-green-100 border border-green-200" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Confirmed</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-emerald-600 border border-emerald-700" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Checked In</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-purple-100 border border-purple-200" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">External</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-blue-50/30 border border-blue-100" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Today</span>
+          </div>
         </div>
       </div>
 
@@ -225,7 +246,13 @@ export default function Schedule() {
               ) : (
                 <div className="space-y-4">
                   {getDayBookings(selectedDay).map((b) => (
-                    <div key={b.id} className="flex gap-4 p-4 rounded-2xl border border-stone-100 hover:border-stone-200 transition-all bg-stone-50/30 group">
+                    <div key={b.id} className={cn(
+                      "flex gap-4 p-4 rounded-2xl border transition-all group",
+                      b.status === 'CheckedIn' ? "bg-emerald-50 border-emerald-100 hover:border-emerald-200" :
+                      b.status === 'External' ? "bg-purple-50 border-purple-100 hover:border-purple-200" :
+                      b.status === 'CheckedOut' ? "bg-stone-50 border-stone-100 hover:border-stone-200" :
+                      "bg-green-50 border-green-100 hover:border-green-200"
+                    )}>
                       <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-stone-900 font-serif italic text-xl border border-stone-100 shadow-sm shrink-0">
                         {getRoomNumber(b.roomId)}
                       </div>
@@ -234,9 +261,10 @@ export default function Schedule() {
                           <h4 className="font-bold text-stone-900 truncate">{getGuestName(b.guestId)}</h4>
                           <span className={cn(
                             "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                            b.status === 'CheckedIn' ? "bg-emerald-100 text-emerald-700" :
+                            b.status === 'CheckedIn' ? "bg-emerald-600 text-white" :
+                            b.status === 'External' ? "bg-purple-100 text-purple-700" :
                             b.status === 'CheckedOut' ? "bg-stone-100 text-stone-600" :
-                            "bg-blue-100 text-blue-700"
+                            "bg-green-100 text-green-800"
                           )}>
                             {b.status}
                           </span>
