@@ -28,6 +28,7 @@ import { Settings as SettingsType, AppTheme, BackupFrequency, UserProfile } from
 import { createBackup } from '../services/backupService';
 import { exportToExcel } from '../services/excelService';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { cn } from '../lib/utils';
 
 const COUNTRIES = [
   { name: 'South Africa', currency: 'R' },
@@ -153,6 +154,14 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
     }
+  };
+
+  const isUserOnline = (lastSeen?: string) => {
+    if (!lastSeen) return false;
+    const lastSeenDate = new Date(lastSeen);
+    const now = new Date();
+    // If seen within the last 2 minutes, consider online
+    return now.getTime() - lastSeenDate.getTime() < 120000;
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -929,12 +938,18 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
                         <tr key={u.uid} className="group hover:bg-accent/5">
                           <td className="py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden">
-                                {u.photoURL ? (
-                                  <img src={u.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                ) : (
-                                  <Users className="w-4 h-4 text-stone-400" />
-                                )}
+                              <div className="relative shrink-0">
+                                <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden">
+                                  {u.photoURL ? (
+                                    <img src={u.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                  ) : (
+                                    <Users className="w-4 h-4 text-stone-400" />
+                                  )}
+                                </div>
+                                <div className={cn(
+                                  "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white",
+                                  isUserOnline(u.lastSeen) ? "bg-emerald-500" : "bg-rose-500"
+                                )} title={isUserOnline(u.lastSeen) ? "Online" : "Offline"} />
                               </div>
                               <span className="font-medium text-primary">{u.displayName}</span>
                             </div>

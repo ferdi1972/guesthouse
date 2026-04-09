@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDocFromServer, collection } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDocFromServer, collection, updateDoc } from 'firebase/firestore';
 import { cn } from './lib/utils';
 import { handleFirestoreError, OperationType } from './lib/firestore-utils';
 
@@ -236,6 +236,38 @@ export default function App() {
     console.error('Logout error:', error);
   });
 
+  // Heartbeat for presence
+  useEffect(() => {
+    if (!user) return;
+
+    const updatePresence = async () => {
+      try {
+        await updateDoc(doc(db, 'users', user.uid), {
+          lastSeen: new Date().toISOString()
+        });
+      } catch (error) {
+        // Silently fail or handle error
+        console.error('Presence update error:', error);
+      }
+    };
+
+    // Update immediately
+    updatePresence();
+
+    // Update every 30 seconds
+    const interval = setInterval(updatePresence, 30000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const isUserOnline = (lastSeen?: string) => {
+    if (!lastSeen) return false;
+    const lastSeenDate = new Date(lastSeen);
+    const now = new Date();
+    // If seen within the last 2 minutes, consider online
+    return now.getTime() - lastSeenDate.getTime() < 120000;
+  };
+
   useEffect(() => {
     const theme = userProfile?.theme || settings?.theme || 'luxury';
     const themeClass = `theme-${theme}`;
@@ -431,12 +463,18 @@ export default function App() {
               onClick={() => setIsProfileModalOpen(true)}
               className="w-full flex items-center gap-3 px-4 py-3 mb-2 rounded-xl hover:bg-white/5 transition-all text-left group"
             >
-              <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 font-bold overflow-hidden shrink-0">
-                {userProfile?.photoURL ? (
-                  <img src={userProfile.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  userProfile?.displayName?.charAt(0) || user.email?.charAt(0)
-                )}
+              <div className="relative shrink-0">
+                <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 font-bold overflow-hidden">
+                  {userProfile?.photoURL ? (
+                    <img src={userProfile.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    userProfile?.displayName?.charAt(0) || user.email?.charAt(0)
+                  )}
+                </div>
+                <div className={cn(
+                  "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background",
+                  isUserOnline(userProfile?.lastSeen) ? "bg-emerald-500" : "bg-rose-500"
+                )} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate" style={{ color: 'var(--sidebar-foreground)' }}>{userProfile?.displayName || user.displayName}</p>

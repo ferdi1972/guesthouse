@@ -192,6 +192,14 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
     };
   };
 
+  const isUserOnline = (lastSeen?: string) => {
+    if (!lastSeen) return false;
+    const lastSeenDate = new Date(lastSeen);
+    const now = new Date();
+    // If seen within the last 2 minutes, consider online
+    return now.getTime() - lastSeenDate.getTime() < 120000;
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
@@ -391,7 +399,13 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
                   <tr key={user.uid} className="hover:bg-stone-50/50 transition-colors group">
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-3">
-                        <img src={user.photoURL} className="w-10 h-10 rounded-xl shadow-sm" alt="" />
+                        <div className="relative">
+                          <img src={user.photoURL} className="w-10 h-10 rounded-xl shadow-sm" alt="" />
+                          <div className={cn(
+                            "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white",
+                            isUserOnline(user.lastSeen) ? "bg-emerald-500" : "bg-rose-500"
+                          )} title={isUserOnline(user.lastSeen) ? "Online" : "Offline"} />
+                        </div>
                         <div>
                           <div className="font-serif italic text-stone-900">{user.displayName}</div>
                           {user.uid === userProfile?.uid && (

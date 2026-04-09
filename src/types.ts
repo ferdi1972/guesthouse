@@ -82,6 +82,7 @@ export interface UserProfile {
   role: 'admin' | 'manager' | 'staff' | 'user' | 'landlord';
   theme?: AppTheme;
   createdAt: string;
+  lastSeen?: string;
 }
 
 export interface Staff {
