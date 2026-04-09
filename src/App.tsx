@@ -68,7 +68,7 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [settingsLoading, setSettingsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('guests');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [settings, setSettings] = useState<SettingsType | null>(null);
@@ -272,6 +272,7 @@ export default function App() {
     {
       title: 'Management',
       items: [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'analytics', label: 'Analytics', icon: BarChart3 },
       ]
     },
@@ -291,6 +292,7 @@ export default function App() {
     {
       title: 'Operations',
       items: [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'guests', label: 'Guests', icon: Users },
         { id: 'rooms', label: 'Rooms', icon: Bed },
         { id: 'bookings', label: 'Bookings', icon: CalendarDays },
@@ -482,6 +484,7 @@ export default function App() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+          {activeTab === 'dashboard' && <Dashboard settings={settings} />}
           {activeTab === 'guests' && <Guests userProfile={userProfile} />}
           {activeTab === 'rooms' && <Rooms settings={settings} userProfile={userProfile} />}
           {activeTab === 'bookings' && <Bookings settings={settings} userProfile={userProfile} />}
