@@ -127,7 +127,10 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
     setIsLoadingUsers(true);
     try {
       const querySnapshot = await getDocs(collection(db, 'users'));
-      setUsers(querySnapshot.docs.map(doc => doc.data() as UserProfile));
+      setUsers(querySnapshot.docs
+        .map(doc => doc.data() as UserProfile)
+        .filter(u => u.email !== 'admin@qwai.co.za')
+      );
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, 'users');
     } finally {
