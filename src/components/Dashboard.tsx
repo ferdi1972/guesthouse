@@ -98,7 +98,7 @@ export default function Dashboard({ settings }: DashboardProps) {
         setUpcomingReminders(pending);
       }, 
       (error) => {
-        handleFirestoreError(error, OperationType.GET, 'reminders');
+        console.error('Dashboard reminders onSnapshot error:', error);
       }
     );
 

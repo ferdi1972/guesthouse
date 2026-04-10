@@ -58,7 +58,7 @@ export default function Reminders({ settings, userProfile }: RemindersProps) {
       setReminders(list.sort((a, b) => (a.dueTime || '').localeCompare(b.dueTime || '')));
       setLoading(false);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'reminders');
+      console.error('Reminders onSnapshot error:', error);
       setLoading(false);
     });
 

@@ -12,8 +12,8 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && (
-        (request.auth.token.email in ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"] && request.auth.token.email_verified == true) ||
-        (request.auth.token.email.matches("admin@qwai.*") && request.auth.token.email_verified == true) ||
+        request.auth.token.email in ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"] ||
+        request.auth.token.email.matches("admin@qwai.*") ||
         request.auth.uid in ["MJSsqJjxKTVcBYHP4bGx1F6Vh1w2", "Bmx9gwiexiSI5uaJ0d7qP2SHM0O2"] ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
