@@ -49,6 +49,7 @@ import Analytics from './components/Analytics';
 import StaffPage from './components/Staff';
 import Settings from './components/Settings';
 import Support from './components/Support';
+import UserManual from './components/UserManual';
 import CalculatorModal from './components/CalculatorModal';
 import Electricity from './components/Electricity';
 import ReceiptsList from './components/ReceiptsList';
@@ -320,6 +321,7 @@ export default function App() {
       title: 'Support',
       items: [
         { id: 'support', label: 'Support', icon: LifeBuoy },
+        { id: 'user-manual', label: 'User Manual', icon: Book },
       ]
     }
   ] : [
@@ -361,6 +363,7 @@ export default function App() {
       title: 'Support',
       items: [
         { id: 'support', label: 'Support', icon: LifeBuoy },
+        { id: 'user-manual', label: 'User Manual', icon: Book },
       ]
     },
     ...(userProfile?.role === 'admin' || userProfile?.role === 'manager' ? [{
@@ -536,6 +539,7 @@ export default function App() {
           {activeTab === 'message-staff' && <div className="text-center py-20 text-stone-400 italic">Please use the sidebar button to message.</div>}
           
           {activeTab === 'support' && <Support settings={settings} userProfile={userProfile} />}
+          {activeTab === 'user-manual' && <UserManual />}
           
           {/* Management Tabs - Admin, Manager or Landlord */}
           {(userProfile?.role === 'admin' || userProfile?.role === 'manager' || userProfile?.role === 'landlord') && (

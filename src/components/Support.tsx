@@ -5,7 +5,8 @@ import {
   Phone, 
   Building2, 
   User,
-  ExternalLink
+  ExternalLink,
+  Book
 } from 'lucide-react';
 import { Settings, UserProfile } from '../types';
 
@@ -112,7 +113,21 @@ export default function Support({ settings, userProfile }: SupportProps) {
           </div>
 
           {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (
-            <div className="pt-8 border-t border-stone-100">
+            <div className="pt-8 border-t border-stone-100 space-y-4">
+              <div className="bg-stone-50 p-6 rounded-3xl border border-stone-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center sm:text-left">
+                  <p className="font-bold text-stone-900">User Manual</p>
+                  <p className="text-xs text-stone-500">Need a guide on how to use the application? Check out the full manual.</p>
+                </div>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'user-manual' }))}
+                  className="px-6 py-3 bg-white border border-stone-200 text-stone-900 rounded-xl font-bold hover:bg-stone-50 transition-all flex items-center gap-2 shadow-sm"
+                >
+                  View User Manual
+                  <Book className="w-4 h-4" />
+                </button>
+              </div>
+
               <div className="bg-stone-50 p-6 rounded-3xl border border-stone-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="text-center sm:text-left">
                   <p className="font-bold text-stone-900">Administrator Access</p>
