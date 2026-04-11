@@ -43,20 +43,20 @@ export default function Schedule() {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
       setRooms(list.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })));
     }, (error) => {
-      console.error('Schedule rooms onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'rooms');
     });
 
     const unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
       setBookings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking)));
     }, (error) => {
-      console.error('Schedule bookings onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'bookings');
     });
 
     const unsubGuests = onSnapshot(collection(db, 'guests'), (snap) => {
       setGuests(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guest)));
       setLoading(false);
     }, (error) => {
-      console.error('Schedule guests onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'guests');
       setLoading(false);
     });
 

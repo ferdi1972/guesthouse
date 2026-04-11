@@ -11,6 +11,7 @@ import {
 import { doc, setDoc, getDocs, collection, query, limit, getDoc } from 'firebase/firestore';
 import { Hotel, Mail, Lock, User, ArrowRight, Loader2, KeyRound, Chrome, ArrowLeft } from 'lucide-react';
 import { UserProfile } from '../types';
+import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 interface AuthProps {
   onBack?: () => void;
@@ -73,12 +74,24 @@ export default function Auth({ onBack }: AuthProps) {
 
       // Check if profile exists
       const docRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(docRef);
+      let docSnap;
+      try {
+        docSnap = await getDoc(docRef);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.GET, `users/${user.uid}`);
+        throw err;
+      }
 
       if (!docSnap.exists()) {
         // Check if this is the first user
-        const usersSnap = await getDocs(query(collection(db, 'users'), limit(1)));
-        const isFirstUser = usersSnap.empty;
+        let isFirstUser = false;
+        try {
+          const usersSnap = await getDocs(query(collection(db, 'users'), limit(1)));
+          isFirstUser = usersSnap.empty;
+        } catch (err) {
+          handleFirestoreError(err, OperationType.GET, 'users');
+          throw err;
+        }
         
         const isAdminEmail = (email: string) => {
           const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
@@ -94,7 +107,12 @@ export default function Auth({ onBack }: AuthProps) {
           createdAt: new Date().toISOString()
         };
 
-        await setDoc(docRef, newProfile);
+        try {
+          await setDoc(docRef, newProfile);
+        } catch (err) {
+          handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}`);
+          throw err;
+        }
       }
     } catch (err: any) {
       console.error('Google Auth error:', err);
@@ -128,8 +146,14 @@ export default function Auth({ onBack }: AuthProps) {
         await updateProfile(user, { displayName });
 
         // Check if this is the first user OR the bootstrap admin
-        const usersSnap = await getDocs(query(collection(db, 'users'), limit(1)));
-        const isFirstUser = usersSnap.empty;
+        let isFirstUser = false;
+        try {
+          const usersSnap = await getDocs(query(collection(db, 'users'), limit(1)));
+          isFirstUser = usersSnap.empty;
+        } catch (err) {
+          handleFirestoreError(err, OperationType.GET, 'users');
+          throw err;
+        }
         
         const isAdminEmail = (email: string) => {
           const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
@@ -145,7 +169,12 @@ export default function Auth({ onBack }: AuthProps) {
           createdAt: new Date().toISOString()
         };
 
-        await setDoc(doc(db, 'users', user.uid), newProfile);
+        try {
+          await setDoc(doc(db, 'users', user.uid), newProfile);
+        } catch (err) {
+          handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}`);
+          throw err;
+        }
       }
     } catch (err: any) {
       console.error('Auth error:', err);

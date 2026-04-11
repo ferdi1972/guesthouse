@@ -53,7 +53,7 @@ export default function Dashboard({ settings }: DashboardProps) {
       const available = snap.docs.filter(doc => doc.data().status === 'Available').length;
       setStats(prev => ({ ...prev, availableRooms: available }));
     }, (error) => {
-      console.error('Dashboard rooms onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'rooms');
     });
 
     const unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
@@ -71,7 +71,7 @@ export default function Dashboard({ settings }: DashboardProps) {
         .slice(0, 5);
       setRecentBookings(sorted);
     }, (error) => {
-      console.error('Dashboard bookings onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'bookings');
     });
 
     const unsubCash = onSnapshot(collection(db, 'cashbook'), (snap) => {
@@ -85,7 +85,7 @@ export default function Dashboard({ settings }: DashboardProps) {
         }, 0);
       setStats(prev => ({ ...prev, dailyRevenue: revenue }));
     }, (error) => {
-      console.error('Dashboard cashbook onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'cashbook');
     });
 
     const unsubReminders = onSnapshot(
@@ -98,7 +98,7 @@ export default function Dashboard({ settings }: DashboardProps) {
         setUpcomingReminders(pending);
       }, 
       (error) => {
-        console.error('Dashboard reminders onSnapshot error:', error);
+        handleFirestoreError(error, OperationType.GET, 'reminders');
       }
     );
 

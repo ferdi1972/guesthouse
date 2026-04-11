@@ -126,18 +126,18 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
     const unsubBookings = onSnapshot(query(collection(db, 'bookings'), orderBy('createdAt', 'desc')), (snap) => {
       setBookings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking)));
     }, (error) => {
-      console.error('Bookings onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'bookings');
     });
     const unsubGuests = onSnapshot(collection(db, 'guests'), (snap) => {
       setGuests(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guest)));
     }, (error) => {
-      console.error('Guests onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'guests');
     });
     const unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
       setRooms(list.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })));
     }, (error) => {
-      console.error('Rooms onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'rooms');
     });
     return () => {
       unsubBookings();
@@ -164,12 +164,22 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
             collection(db, 'cashbook'),
             where('bookingId', '==', editingBooking.id)
           );
-          const querySnapshot = await getDocs(cashbookQuery);
-          for (const docSnapshot of querySnapshot.docs) {
-            await updateDoc(doc(db, 'cashbook', docSnapshot.id), {
-              date: bookingDate.toISOString()
-            });
+          let querySnapshot;
+          try {
+            querySnapshot = await getDocs(cashbookQuery);
+          } catch (err) {
+            handleFirestoreError(err, OperationType.GET, 'cashbook');
+            throw err;
           }
+          const updatePromises = querySnapshot.docs.map(docSnapshot => 
+            updateDoc(doc(db, 'cashbook', docSnapshot.id), {
+              date: bookingDate.toISOString()
+            }).catch(err => {
+              handleFirestoreError(err, OperationType.UPDATE, `cashbook/${docSnapshot.id}`);
+              throw err;
+            })
+          );
+          await Promise.all(updatePromises);
         }
       } else {
         await addDoc(collection(db, 'bookings'), {
@@ -272,7 +282,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
         isPaid: isFullyPaid,
         lastPaymentMethod: paymentMethod
       };
-      handleGenerateReceipt(updatedBooking, paymentAmount);
+      await handleGenerateReceipt(updatedBooking, paymentAmount);
       
       setPaymentBooking(null);
       setPaymentMethod('Cash');
@@ -314,12 +324,22 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
         where('type', '==', 'Income')
       );
       
-      const querySnapshot = await getDocs(cashbookQuery);
-      for (const docSnapshot of querySnapshot.docs) {
-        await updateDoc(doc(db, 'cashbook', docSnapshot.id), {
-          description: `${docSnapshot.data().description} - [CANCELLED]`
-        });
+      let querySnapshot;
+      try {
+        querySnapshot = await getDocs(cashbookQuery);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.GET, 'cashbook');
+        throw err;
       }
+      const updatePromises = querySnapshot.docs.map(docSnapshot => 
+        updateDoc(doc(db, 'cashbook', docSnapshot.id), {
+          description: `${docSnapshot.data().description} - [CANCELLED]`
+        }).catch(err => {
+          handleFirestoreError(err, OperationType.UPDATE, `cashbook/${docSnapshot.id}`);
+          throw err;
+        })
+      );
+      await Promise.all(updatePromises);
       
       setIsRefundModalOpen(false);
       setRefundBooking(null);

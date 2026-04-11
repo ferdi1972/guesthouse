@@ -119,7 +119,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
 
   useEffect(() => {
     if (userProfile?.role === 'admin') {
-      fetchUsers();
+      fetchUsers().catch(err => console.error('fetchUsers error:', err));
     }
   }, [userProfile]);
 
@@ -241,15 +241,10 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
           const chunk = docs.slice(i, i + 500);
           
           chunk.forEach((docSnap) => {
-            // We delete everything including the current user for a true factory reset
             batch.delete(docSnap.ref);
           });
           
-          try {
-            await batch.commit();
-          } catch (error) {
-            console.error(`Error deleting batch in ${colName}:`, error);
-          }
+          await batch.commit();
         }
       }
 
@@ -258,7 +253,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
       await auth.signOut();
       window.location.reload();
     } catch (error) {
-      console.error('Error during factory reset:', error);
+      handleFirestoreError(error, OperationType.DELETE, 'factory-reset');
       alert('Failed to perform factory reset. Please try again.');
     } finally {
       setIsFactoryResetting(false);
@@ -334,10 +329,15 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
           alert('Data restored successfully! The page will now reload to apply changes.');
           window.location.reload();
         } catch (error) {
-          console.error('Error parsing or saving backup data:', error);
+          handleFirestoreError(error, OperationType.WRITE, 'restore');
           alert('Failed to restore data. The file might be corrupted or in an invalid format.');
           setIsRestoring(false);
         }
+      };
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error);
+        alert('Error reading the backup file.');
+        setIsRestoring(false);
       };
       reader.readAsText(file);
     } catch (error) {

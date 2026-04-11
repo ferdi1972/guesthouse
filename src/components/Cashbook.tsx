@@ -95,7 +95,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
     const unsub = onSnapshot(query(collection(db, 'cashbook'), orderBy('date', 'desc')), (snap) => {
       setEntries(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as CashbookEntry)));
     }, (error) => {
-      console.error('Cashbook onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'cashbook');
     });
     return () => unsub();
   }, []);
@@ -104,7 +104,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
     const unsubBudgets = onSnapshot(query(collection(db, 'budgets'), orderBy('category', 'asc')), (snap) => {
       setBudgets(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Budget)));
     }, (error) => {
-      console.error('Budgets onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'budgets');
     });
     return () => unsubBudgets();
   }, []);
@@ -113,7 +113,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
     const unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
       setBookings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking)));
     }, (error) => {
-      console.error('Bookings onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'bookings');
     });
     const unsubGuests = onSnapshot(collection(db, 'guests'), (snap) => {
       const guestMap: Record<string, Guest> = {};
@@ -122,7 +122,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
       });
       setGuests(guestMap);
     }, (error) => {
-      console.error('Guests onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'guests');
     });
     return () => {
       unsubBookings();

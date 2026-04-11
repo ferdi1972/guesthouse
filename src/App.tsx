@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDocFromServer, collection, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, collection, updateDoc } from 'firebase/firestore';
 import { cn } from './lib/utils';
 import { handleFirestoreError, OperationType } from './lib/firestore-utils';
 
@@ -107,12 +107,10 @@ export default function App() {
         setSettings(prev => ({ ...prev, ...generalData } as SettingsType));
         setSettingsLoading(false);
       } else {
-        // If it doesn't exist, we don't set loading to false yet, 
-        // we wait for the auth effect to potentially bootstrap it
-        // or we set it to false if we know we can't bootstrap
+        setSettingsLoading(false);
       }
     }, (error) => {
-      console.error('Settings onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'settings/general');
       setSettingsLoading(false);
     });
 
@@ -146,14 +144,15 @@ export default function App() {
     // Test connection
     const testConnection = async () => {
       try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
+        await getDoc(doc(db, 'test', 'connection'));
       } catch (error) {
         if (error instanceof Error && error.message.includes('the client is offline')) {
           console.error("Please check your Firebase configuration.");
         }
+        // Skip logging for other errors, as this is simply a connection test.
       }
     };
-    testConnection();
+    testConnection().catch(() => {}); // Silent catch for connection test
 
     // Listen to user profile
     const unsubUser = onSnapshot(doc(db, 'users', user.uid), (snapshot) => {
@@ -169,27 +168,35 @@ export default function App() {
             };
 
             if (isAdminEmail(user.email || '') && profile.role !== 'admin') {
-              await setDoc(doc(db, 'users', user.uid), { ...profile, role: 'admin' }, { merge: true });
-              setUserProfile({ ...profile, role: 'admin' });
+              try {
+                await setDoc(doc(db, 'users', user.uid), { ...profile, role: 'admin' }, { merge: true });
+                setUserProfile({ ...profile, role: 'admin' });
+              } catch (err) {
+                handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
+              }
             } else {
               setUserProfile(profile);
             }
 
             // Bootstrap settings if they don't exist and user is admin
             if (profile.role === 'admin' || isAdminEmail(user.email || '')) {
-              const settingsSnap = await getDocFromServer(doc(db, 'settings', 'general'));
-              if (!settingsSnap.exists()) {
-                const defaultSettings: SettingsType = {
-                  companyName: 'My Guesthouse',
-                  address: '',
-                  phone: '',
-                  email: '',
-                  country: 'South Africa',
-                  currency: 'R',
-                  taxRate: 0,
-                  theme: 'luxury'
-                };
-                await setDoc(doc(db, 'settings', 'general'), defaultSettings);
+              try {
+                const settingsSnap = await getDoc(doc(db, 'settings', 'general'));
+                if (!settingsSnap.exists()) {
+                  const defaultSettings: SettingsType = {
+                    companyName: 'My Guesthouse',
+                    address: '',
+                    phone: '',
+                    email: '',
+                    country: 'South Africa',
+                    currency: 'R',
+                    taxRate: 0,
+                    theme: 'luxury'
+                  };
+                  await setDoc(doc(db, 'settings', 'general'), defaultSettings);
+                }
+              } catch (err) {
+                handleFirestoreError(err, OperationType.CREATE, 'settings/general');
               }
             }
           } else {
@@ -206,22 +213,26 @@ export default function App() {
               theme: 'luxury',
               createdAt: new Date().toISOString()
             };
-            await setDoc(doc(db, 'users', user.uid), newProfile);
+            try {
+              await setDoc(doc(db, 'users', user.uid), newProfile);
+            } catch (err) {
+              handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}`);
+            }
           }
         } catch (error) {
-          console.error('Error handling user profile or settings:', error);
+          handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
         }
       };
-      handleProfile();
+      handleProfile().catch(err => handleFirestoreError(err, OperationType.GET, `users/${user.uid}`));
     }, (error) => {
-      console.error('User profile onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
     });
 
     // Listen to staff
     const unsubStaff = onSnapshot(collection(db, 'staff'), (snap) => {
       setStaff(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as StaffType)));
     }, (error) => {
-      console.error('Staff onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'staff');
     });
 
     return () => {
@@ -258,16 +269,17 @@ export default function App() {
           lastSeen: new Date().toISOString()
         });
       } catch (error) {
-        // Silently fail or handle error
-        console.error('Presence update error:', error);
+        handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
       }
     };
 
     // Update immediately
-    updatePresence();
+    updatePresence().catch(err => console.error('Initial presence update error:', err));
 
     // Update every 30 seconds
-    const interval = setInterval(updatePresence, 30000);
+    const interval = setInterval(() => {
+      updatePresence().catch(err => console.error('Interval presence update error:', err));
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [user]);

@@ -67,7 +67,7 @@ export default function Guests({ userProfile }: GuestsProps) {
       });
       setGuests(sorted);
     }, (error) => {
-      console.error('Guests onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'guests');
     });
     return () => unsub();
   }, []);

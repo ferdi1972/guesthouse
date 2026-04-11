@@ -21,7 +21,7 @@ import {
   Link
 } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, getDocFromServer, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, where } from 'firebase/firestore';
 import { Room, RoomStatus, Settings, Booking, Guest, UserProfile, RoomInventoryItem } from '../types';
 import { 
   format, 
@@ -87,13 +87,13 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
       setRooms(list);
     }, (error) => {
-      console.error('Rooms onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'rooms');
     });
 
     const unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
       setBookings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking)));
     }, (error) => {
-      console.error('Bookings onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'bookings');
     });
 
     const unsubGuests = onSnapshot(collection(db, 'guests'), (snap) => {
@@ -103,7 +103,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
       });
       setGuests(guestMap);
     }, (error) => {
-      console.error('Guests onSnapshot error:', error);
+      handleFirestoreError(error, OperationType.GET, 'guests');
     });
 
     return () => {
@@ -125,7 +125,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
         setRoomInventory(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RoomInventoryItem)));
       },
       (error) => {
-        console.error('RoomInventory onSnapshot error:', error);
+        handleFirestoreError(error, OperationType.GET, `roomInventory?roomId=${inventoryRoom.id}`);
       }
     );
 

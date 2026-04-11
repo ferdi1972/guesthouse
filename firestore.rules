@@ -32,11 +32,11 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'email', 'displayName', 'role']) &&
              data.uid == request.auth.uid &&
-             data.email is string &&
-             data.displayName is string &&
+             data.email is string && data.email.size() < 200 &&
+             data.displayName is string && data.displayName.size() < 100 &&
              data.role in ['admin', 'manager', 'staff', 'user', 'landlord'] &&
              (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1048576)) &&
-             (!('theme' in data) || data.theme is string);
+             (!('theme' in data) || (data.theme is string && data.theme.size() < 50));
     }
 
     function isValidGuest(data) {
@@ -68,24 +68,25 @@ service cloud.firestore {
 
     function isValidBooking(data) {
       return data.keys().hasAll(['guestId', 'roomId', 'rateType', 'totalAmount']) &&
-             data.guestId is string &&
-             data.roomId is string &&
-             data.rateType in ['Single', 'Double', 'Weekend Single', 'Weekend Double', 'Hourly'] &&
+             data.guestId is string && data.guestId.size() < 100 &&
+             data.roomId is string && data.roomId.size() < 100 &&
+             data.rateType in ['Single', 'Double', 'Weekend Single', 'Weekend Double', 'Hourly', 'Manual'] &&
              data.totalAmount is number &&
              (!('manualAmount' in data) || data.manualAmount is number) &&
-             (!('company' in data) || data.company is string) &&
+             (!('manualRate' in data) || data.manualRate is number) &&
+             (!('company' in data) || (data.company is string && data.company.size() < 200)) &&
              (!('paidAmount' in data) || data.paidAmount is number) &&
              (!('isPaid' in data) || data.isPaid is bool) &&
              (!('status' in data) || data.status in ['Confirmed', 'CheckedIn', 'CheckedOut', 'Cancelled', 'External']) &&
-             (!('checkIn' in data) || data.checkIn is string) &&
-             (!('checkOut' in data) || data.checkOut is string) &&
-             (!('checkInTime' in data) || data.checkInTime is string) &&
-             (!('checkOutTime' in data) || data.checkOutTime is string) &&
+             (!('checkIn' in data) || (data.checkIn is string && data.checkIn.size() < 50)) &&
+             (!('checkOut' in data) || (data.checkOut is string && data.checkOut.size() < 50)) &&
+             (!('checkInTime' in data) || (data.checkInTime is string && data.checkInTime.size() < 20)) &&
+             (!('checkOutTime' in data) || (data.checkOutTime is string && data.checkOutTime.size() < 20)) &&
              (!('hours' in data) || data.hours is number) &&
-             (!('lastPaymentMethod' in data) || data.lastPaymentMethod is string) &&
-             (!('externalSource' in data) || data.externalSource is string) &&
-             (!('externalUid' in data) || data.externalUid is string) &&
-             (!('createdAt' in data) || data.createdAt is string);
+             (!('lastPaymentMethod' in data) || (data.lastPaymentMethod is string && data.lastPaymentMethod.size() < 50)) &&
+             (!('externalSource' in data) || (data.externalSource is string && data.externalSource.size() < 100)) &&
+             (!('externalUid' in data) || (data.externalUid is string && data.externalUid.size() < 100)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() < 50));
     }
 
     function isBookingOperationalUpdate() {
