@@ -101,31 +101,19 @@ export default function App() {
 
   useEffect(() => {
     // Listen to general settings (Public)
-    const unsubSettings = onSnapshot(doc(db, 'settings', 'general'), async (snapshot) => {
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'general'), (snapshot) => {
       if (snapshot.exists()) {
         const generalData = snapshot.data();
         setSettings(prev => ({ ...prev, ...generalData } as SettingsType));
+        setSettingsLoading(false);
       } else {
-        // Initialize default settings if not exists
-        const defaultSettings: SettingsType = {
-          companyName: 'My Guesthouse',
-          address: '',
-          phone: '',
-          email: '',
-          country: 'South Africa',
-          currency: 'R',
-          taxRate: 0,
-          theme: 'luxury'
-        };
-        try {
-          await setDoc(doc(db, 'settings', 'general'), defaultSettings);
-        } catch (error) {
-          handleFirestoreError(error, OperationType.CREATE, 'settings/general');
-        }
+        // If it doesn't exist, we don't set loading to false yet, 
+        // we wait for the auth effect to potentially bootstrap it
+        // or we set it to false if we know we can't bootstrap
       }
-      setSettingsLoading(false);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'settings/general');
+      console.error('Settings onSnapshot error:', error);
+      setSettingsLoading(false);
     });
 
     // Listen to assets (Public)
@@ -168,51 +156,72 @@ export default function App() {
     testConnection();
 
     // Listen to user profile
-    const unsubUser = onSnapshot(doc(db, 'users', user.uid), async (snapshot) => {
-      try {
-        if (snapshot.exists()) {
-          const profile = snapshot.data() as UserProfile;
-          
-          // Bootstrap admin upgrade
-          const isAdminEmail = (email: string) => {
-            const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
-            return adminEmails.includes(email) || email.startsWith('admin@qwai');
-          };
+    const unsubUser = onSnapshot(doc(db, 'users', user.uid), (snapshot) => {
+      const handleProfile = async () => {
+        try {
+          if (snapshot.exists()) {
+            const profile = snapshot.data() as UserProfile;
+            
+            // Bootstrap admin upgrade
+            const isAdminEmail = (email: string) => {
+              const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
+              return adminEmails.includes(email) || email.startsWith('admin@qwai');
+            };
 
-          if (isAdminEmail(user.email || '') && profile.role !== 'admin') {
-            await setDoc(doc(db, 'users', user.uid), { ...profile, role: 'admin' }, { merge: true });
-            setUserProfile({ ...profile, role: 'admin' });
+            if (isAdminEmail(user.email || '') && profile.role !== 'admin') {
+              await setDoc(doc(db, 'users', user.uid), { ...profile, role: 'admin' }, { merge: true });
+              setUserProfile({ ...profile, role: 'admin' });
+            } else {
+              setUserProfile(profile);
+            }
+
+            // Bootstrap settings if they don't exist and user is admin
+            if (profile.role === 'admin' || isAdminEmail(user.email || '')) {
+              const settingsSnap = await getDocFromServer(doc(db, 'settings', 'general'));
+              if (!settingsSnap.exists()) {
+                const defaultSettings: SettingsType = {
+                  companyName: 'My Guesthouse',
+                  address: '',
+                  phone: '',
+                  email: '',
+                  country: 'South Africa',
+                  currency: 'R',
+                  taxRate: 0,
+                  theme: 'luxury'
+                };
+                await setDoc(doc(db, 'settings', 'general'), defaultSettings);
+              }
+            }
           } else {
-            setUserProfile(profile);
-          }
-        } else {
-          const isAdminEmail = (email: string) => {
-            const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
-            return adminEmails.includes(email) || email.startsWith('admin@qwai');
-          };
+            const isAdminEmail = (email: string) => {
+              const adminEmails = ['ferditviljoen@gmail.com', 'admin@qwai.co.za', 'admin@qwai-enterprises.co.za'];
+              return adminEmails.includes(email) || email.startsWith('admin@qwai');
+            };
 
-          const newProfile: UserProfile = {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || user.email?.split('@')[0] || 'User',
-            role: isAdminEmail(user.email || '') ? 'admin' : 'user',
-            theme: 'luxury',
-            createdAt: new Date().toISOString()
-          };
-          await setDoc(doc(db, 'users', user.uid), newProfile);
+            const newProfile: UserProfile = {
+              uid: user.uid,
+              email: user.email || '',
+              displayName: user.displayName || user.email?.split('@')[0] || 'User',
+              role: isAdminEmail(user.email || '') ? 'admin' : 'user',
+              theme: 'luxury',
+              createdAt: new Date().toISOString()
+            };
+            await setDoc(doc(db, 'users', user.uid), newProfile);
+          }
+        } catch (error) {
+          console.error('Error handling user profile or settings:', error);
         }
-      } catch (error) {
-        handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
-      }
+      };
+      handleProfile();
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
+      console.error('User profile onSnapshot error:', error);
     });
 
     // Listen to staff
     const unsubStaff = onSnapshot(collection(db, 'staff'), (snap) => {
       setStaff(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as StaffType)));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'staff');
+      console.error('Staff onSnapshot error:', error);
     });
 
     return () => {

@@ -87,13 +87,13 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
       setRooms(list);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'rooms');
+      console.error('Rooms onSnapshot error:', error);
     });
 
     const unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
       setBookings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking)));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'bookings');
+      console.error('Bookings onSnapshot error:', error);
     });
 
     const unsubGuests = onSnapshot(collection(db, 'guests'), (snap) => {
@@ -103,7 +103,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
       });
       setGuests(guestMap);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'guests');
+      console.error('Guests onSnapshot error:', error);
     });
 
     return () => {
@@ -125,7 +125,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
         setRoomInventory(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RoomInventoryItem)));
       },
       (error) => {
-        handleFirestoreError(error, OperationType.GET, 'roomInventory');
+        console.error('RoomInventory onSnapshot error:', error);
       }
     );
 

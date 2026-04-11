@@ -47,7 +47,7 @@ export default function Inventory({ settings, userProfile }: InventoryProps) {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
       setRooms(list.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'rooms');
+      console.error('Inventory rooms onSnapshot error:', error);
     });
 
     const unsubInventory = onSnapshot(
@@ -57,7 +57,8 @@ export default function Inventory({ settings, userProfile }: InventoryProps) {
         setLoading(false);
       },
       (error) => {
-        handleFirestoreError(error, OperationType.GET, 'roomInventory');
+        console.error('Inventory onSnapshot error:', error);
+        setLoading(false);
       }
     );
 

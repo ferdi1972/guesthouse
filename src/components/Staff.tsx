@@ -53,7 +53,7 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
     const unsubStaff = onSnapshot(collection(db, 'staff'), (snap) => {
       setStaff(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Staff)));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'staff');
+      console.error('Staff onSnapshot error:', error);
     });
 
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
@@ -62,13 +62,13 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
         .filter(u => u.email !== 'admin@qwai.co.za')
       );
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'users');
+      console.error('Users onSnapshot error:', error);
     });
 
     const unsubCash = onSnapshot(collection(db, 'cashbook'), (snap) => {
       setCashbook(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as CashbookEntry)));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'cashbook');
+      console.error('Cashbook onSnapshot error:', error);
     });
 
     return () => {

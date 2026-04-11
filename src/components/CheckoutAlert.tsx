@@ -46,18 +46,18 @@ export default function CheckoutAlert() {
         setBookings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking)));
       },
       (error) => {
-        handleFirestoreError(error, OperationType.GET, 'bookings');
+        console.error('CheckoutAlert bookings onSnapshot error:', error);
       }
     );
     const unsubGuests = onSnapshot(collection(db, 'guests'), (snap) => {
       setGuests(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guest)));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'guests');
+      console.error('CheckoutAlert guests onSnapshot error:', error);
     });
     const unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
       setRooms(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room)));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'rooms');
+      console.error('CheckoutAlert rooms onSnapshot error:', error);
     });
 
     return () => {

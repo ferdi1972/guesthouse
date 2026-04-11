@@ -89,6 +89,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
     status: 'Confirmed' as BookingStatus,
     totalAmount: 0,
     manualAmount: undefined as number | undefined,
+    manualRate: undefined as number | undefined,
     company: '',
   });
 
@@ -114,28 +115,29 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       else if (formData.rateType === 'Double') rate = room.doubleRate;
       else if (formData.rateType === 'Weekend Single') rate = room.weekendSingleRate || room.singleRate;
       else if (formData.rateType === 'Weekend Double') rate = room.weekendDoubleRate || room.doubleRate;
+      else if (formData.rateType === 'Manual') rate = formData.manualRate || 0;
       
       total = nights * rate;
     }
     setFormData(prev => ({ ...prev, totalAmount: total }));
-  }, [formData.roomId, formData.rateType, formData.hours, formData.checkIn, formData.checkOut, rooms]);
+  }, [formData.roomId, formData.rateType, formData.hours, formData.checkIn, formData.checkOut, formData.manualRate, rooms]);
 
   useEffect(() => {
     const unsubBookings = onSnapshot(query(collection(db, 'bookings'), orderBy('createdAt', 'desc')), (snap) => {
       setBookings(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking)));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'bookings');
+      console.error('Bookings onSnapshot error:', error);
     });
     const unsubGuests = onSnapshot(collection(db, 'guests'), (snap) => {
       setGuests(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guest)));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'guests');
+      console.error('Guests onSnapshot error:', error);
     });
     const unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Room));
       setRooms(list.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })));
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'rooms');
+      console.error('Rooms onSnapshot error:', error);
     });
     return () => {
       unsubBookings();
@@ -547,6 +549,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 status: 'Confirmed',
                 totalAmount: 0,
                 manualAmount: undefined,
+                manualRate: undefined,
                 company: ''
               });
               setIsModalOpen(true);
@@ -828,6 +831,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                                       status: booking.status,
                                       totalAmount: booking.totalAmount,
                                       manualAmount: booking.manualAmount,
+                                      manualRate: booking.manualRate,
                                       company: booking.company || ''
                                     });
                                     setIsModalOpen(true);
@@ -1019,6 +1023,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                               status: booking.status,
                               totalAmount: booking.totalAmount,
                               manualAmount: booking.manualAmount,
+                              manualRate: booking.manualRate,
                               company: booking.company || ''
                             });
                             setIsModalOpen(true);
@@ -1178,16 +1183,22 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Manual Amount Override</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">
+                      {formData.rateType === 'Manual' ? 'Manual Rate per Night' : 'Manual Amount Override'}
+                    </label>
                     <input
                       type="number"
-                      value={formData.manualAmount ?? ''}
+                      value={formData.rateType === 'Manual' ? (formData.manualRate ?? '') : (formData.manualAmount ?? '')}
                       onChange={(e) => {
                         const val = e.target.value === '' ? undefined : Number(e.target.value);
-                        setFormData({ ...formData, manualAmount: val });
+                        if (formData.rateType === 'Manual') {
+                          setFormData({ ...formData, manualRate: val });
+                        } else {
+                          setFormData({ ...formData, manualAmount: val });
+                        }
                       }}
                       className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
-                      placeholder="Enter amount to override..."
+                      placeholder={formData.rateType === 'Manual' ? "Enter rate per night..." : "Enter amount to override..."}
                     />
                   </div>
                 </div>
@@ -1221,6 +1232,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       <option value="Weekend Single">Weekend Rate Single</option>
                       <option value="Weekend Double">Weekend Rate Double</option>
                       <option value="Hourly">Hourly Rate</option>
+                      <option value="Manual">Manual Rate</option>
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -1315,7 +1327,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
               <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100 flex items-center justify-between">
                 <div className="flex-1">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 block mb-1">
-                    {formData.rateType === 'Hourly' ? 'Total Amount (Manual Entry)' : 'Estimated Total'}
+                    {formData.rateType === 'Hourly' || formData.rateType === 'Manual' ? 'Total Amount (Manual Entry)' : 'Estimated Total'}
                   </label>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-serif font-bold text-stone-900">{settings?.currency || '$'}</span>
@@ -1325,9 +1337,9 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       onChange={(e) => setFormData({ ...formData, totalAmount: Number(e.target.value) })}
                       className={cn(
                         "text-2xl font-serif font-bold text-stone-900 bg-transparent border-none p-0 focus:ring-0 w-32",
-                        formData.rateType !== 'Hourly' && "pointer-events-none"
+                        (formData.rateType !== 'Hourly' && formData.rateType !== 'Manual') && "pointer-events-none"
                       )}
-                      readOnly={formData.rateType !== 'Hourly'}
+                      readOnly={formData.rateType !== 'Hourly' && formData.rateType !== 'Manual'}
                     />
                   </div>
                 </div>
@@ -1812,6 +1824,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                           status: selectedBooking.status,
                           totalAmount: selectedBooking.totalAmount,
                           manualAmount: selectedBooking.manualAmount,
+                          manualRate: selectedBooking.manualRate,
                           company: selectedBooking.company || ''
                         });
                         setIsModalOpen(true);

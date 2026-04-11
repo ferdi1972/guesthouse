@@ -41,7 +41,7 @@ export interface RoomInventoryItem {
   lastUpdated: string;
 }
 
-export type RateType = 'Single' | 'Double' | 'Weekend Single' | 'Weekend Double' | 'Hourly';
+export type RateType = 'Single' | 'Double' | 'Weekend Single' | 'Weekend Double' | 'Hourly' | 'Manual';
 
 export interface Booking {
   id: string;
@@ -55,6 +55,7 @@ export interface Booking {
   hours?: number;
   totalAmount: number;
   manualAmount?: number;
+  manualRate?: number;
   company?: string;
   paidAmount?: number;
   isPaid?: boolean;
