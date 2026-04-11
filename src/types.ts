@@ -54,6 +54,8 @@ export interface Booking {
   rateType: RateType;
   hours?: number;
   totalAmount: number;
+  manualAmount?: number;
+  company?: string;
   paidAmount?: number;
   isPaid?: boolean;
   status: BookingStatus;

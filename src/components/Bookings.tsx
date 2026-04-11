@@ -88,6 +88,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
     hours: 1,
     status: 'Confirmed' as BookingStatus,
     totalAmount: 0,
+    manualAmount: undefined as number | undefined,
+    company: '',
   });
 
   useEffect(() => {
@@ -144,7 +146,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const totalAmount = formData.totalAmount;
+    const totalAmount = formData.manualAmount !== undefined ? formData.manualAmount : formData.totalAmount;
     const path = editingBooking ? `bookings/${editingBooking.id}` : 'bookings';
     try {
       if (editingBooking) {
@@ -543,7 +545,9 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 rateType: 'Single',
                 hours: 1,
                 status: 'Confirmed',
-                totalAmount: 0
+                totalAmount: 0,
+                manualAmount: undefined,
+                company: ''
               });
               setIsModalOpen(true);
             }}
@@ -663,7 +667,10 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                               <span className="font-medium text-stone-900">
                                 {booking.status === 'External' ? `External: ${booking.externalSource}` : getGuestName(booking.guestId)}
                               </span>
-                              {booking.status === 'External' && (
+                              {booking.company && (
+                                <span className="text-[10px] text-stone-400 uppercase tracking-wider">{booking.company}</span>
+                              )}
+                              {booking.status === 'External' && !booking.company && (
                                 <span className="text-[10px] text-stone-400 uppercase tracking-wider">Sync Booking</span>
                               )}
                             </div>
@@ -819,7 +826,9 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                                       rateType: booking.rateType,
                                       hours: booking.hours || 1,
                                       status: booking.status,
-                                      totalAmount: booking.totalAmount
+                                      totalAmount: booking.totalAmount,
+                                      manualAmount: booking.manualAmount,
+                                      company: booking.company || ''
                                     });
                                     setIsModalOpen(true);
                                   }}
@@ -872,6 +881,9 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       </div>
                       <div>
                         <h4 className="font-bold text-stone-900">{getGuestName(booking.guestId)}</h4>
+                        {booking.company && (
+                          <p className="text-[10px] text-stone-400 uppercase tracking-wider font-medium">{booking.company}</p>
+                        )}
                         {guests.find(g => g.id === booking.guestId)?.isBlacklisted && (
                           <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[8px] font-bold uppercase tracking-widest rounded flex items-center gap-1 w-fit mt-1">
                             <ShieldAlert className="w-2 h-2" /> Blacklisted
@@ -1005,7 +1017,9 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                               rateType: booking.rateType,
                               hours: booking.hours || 1,
                               status: booking.status,
-                              totalAmount: booking.totalAmount
+                              totalAmount: booking.totalAmount,
+                              manualAmount: booking.manualAmount,
+                              company: booking.company || ''
                             });
                             setIsModalOpen(true);
                           }}
@@ -1148,6 +1162,32 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                         }
                       }}
                       className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Company / Source</label>
+                    <input
+                      type="text"
+                      value={formData.company || ''}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                      placeholder="e.g. Booking.com, Corporate..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Manual Amount Override</label>
+                    <input
+                      type="number"
+                      value={formData.manualAmount ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? undefined : Number(e.target.value);
+                        setFormData({ ...formData, manualAmount: val });
+                      }}
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                      placeholder="Enter amount to override..."
                     />
                   </div>
                 </div>
@@ -1770,7 +1810,9 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                           rateType: selectedBooking.rateType,
                           hours: selectedBooking.hours || 1,
                           status: selectedBooking.status,
-                          totalAmount: selectedBooking.totalAmount
+                          totalAmount: selectedBooking.totalAmount,
+                          manualAmount: selectedBooking.manualAmount,
+                          company: selectedBooking.company || ''
                         });
                         setIsModalOpen(true);
                         setIsDetailsModalOpen(false);

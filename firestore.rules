@@ -72,15 +72,19 @@ service cloud.firestore {
              data.roomId is string &&
              data.rateType in ['Single', 'Double', 'Weekend Single', 'Weekend Double', 'Hourly'] &&
              data.totalAmount is number &&
+             (!('manualAmount' in data) || data.manualAmount is number) &&
+             (!('company' in data) || data.company is string) &&
              (!('paidAmount' in data) || data.paidAmount is number) &&
              (!('isPaid' in data) || data.isPaid is bool) &&
-             (!('status' in data) || data.status in ['Confirmed', 'CheckedIn', 'CheckedOut', 'Cancelled']) &&
+             (!('status' in data) || data.status in ['Confirmed', 'CheckedIn', 'CheckedOut', 'Cancelled', 'External']) &&
              (!('checkIn' in data) || data.checkIn is string) &&
              (!('checkOut' in data) || data.checkOut is string) &&
              (!('checkInTime' in data) || data.checkInTime is string) &&
              (!('checkOutTime' in data) || data.checkOutTime is string) &&
              (!('hours' in data) || data.hours is number) &&
              (!('lastPaymentMethod' in data) || data.lastPaymentMethod is string) &&
+             (!('externalSource' in data) || data.externalSource is string) &&
+             (!('externalUid' in data) || data.externalUid is string) &&
              (!('createdAt' in data) || data.createdAt is string);
     }
 

@@ -52,6 +52,8 @@
         "rateType": { "type": "string", "enum": ["Single", "Double", "Hourly"] },
         "hours": { "type": "number" },
         "totalAmount": { "type": "number" },
+        "manualAmount": { "type": "number" },
+        "company": { "type": "string" },
         "isPaid": { "type": "boolean" },
         "status": { "type": "string", "enum": ["Confirmed", "CheckedIn", "CheckedOut", "Cancelled", "External"] },
         "externalSource": { "type": "string", "description": "Source of external booking (e.g. Booking.com)" },
