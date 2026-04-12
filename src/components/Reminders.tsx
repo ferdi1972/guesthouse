@@ -26,7 +26,7 @@ import {
   where
 } from 'firebase/firestore';
 import { Reminder, Settings, UserProfile } from '../types';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { format, isAfter, isBefore, startOfDay, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';
 
@@ -70,7 +70,7 @@ export default function Reminders({ settings, userProfile }: RemindersProps) {
     if (!auth.currentUser) return;
 
     try {
-      const reminderData = {
+      const reminderData = cleanData({
         title: newReminder.title,
         description: newReminder.description,
         dueDate: newReminder.dueDate,
@@ -80,7 +80,7 @@ export default function Reminders({ settings, userProfile }: RemindersProps) {
         authorId: auth.currentUser.uid,
         authorName: userProfile?.displayName || auth.currentUser.email || 'Admin',
         createdAt: new Date().toISOString()
-      };
+      });
 
       await addDoc(collection(db, 'reminders'), reminderData);
       setIsAddModalOpen(false);

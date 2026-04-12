@@ -21,7 +21,7 @@ import { collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } fro
 import { Receipt, Settings, UserProfile } from '../types';
 import { format, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { auth } from '../firebase';
 
 interface ReceiptsListProps {
@@ -62,12 +62,12 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
     if (!editingReceipt) return;
 
     try {
-      const updatedData = {
+      const updatedData = cleanData({
         ...editFormData,
         notes: editFormData.notes || '',
         paymentMethod: editFormData.paymentMethod || '',
         balance: (editFormData.totalAmount || 0) - (editFormData.paidAmount || 0)
-      };
+      });
       await updateDoc(doc(db, 'receipts', editingReceipt.id), updatedData);
       setEditingReceipt(null);
       setEditFormData({});
@@ -586,13 +586,18 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Payment Method</label>
-                  <input
-                    type="text"
+                  <select
                     value={editFormData.paymentMethod || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, paymentMethod: e.target.value })}
-                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
-                    placeholder="e.g. Cash, Card, EFT"
-                  />
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all appearance-none"
+                  >
+                    <option value="">Select Method</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="EFT">EFT</option>
+                    <option value="Booking.com">Booking.com</option>
+                    <option value="Lekkeslaap">Lekkeslaap</option>
+                  </select>
                 </div>
               </div>
 

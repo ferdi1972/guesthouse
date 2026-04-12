@@ -27,7 +27,7 @@ import { doc, setDoc, collection, getDocs, writeBatch, deleteDoc } from 'firebas
 import { Settings as SettingsType, AppTheme, BackupFrequency, UserProfile } from '../types';
 import { createBackup } from '../services/backupService';
 import { exportToExcel } from '../services/excelService';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { cn } from '../lib/utils';
 
 const COUNTRIES = [
@@ -377,19 +377,19 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
         const { landingImage, supportLogo, ...generalData } = formData;
         
         // Save general settings
-        await setDoc(doc(db, 'settings', 'general'), generalData);
+        await setDoc(doc(db, 'settings', 'general'), cleanData(generalData));
         
         // Save assets separately to avoid document size limits
-        await setDoc(doc(db, 'settings', 'landing_image'), { landingImage: landingImage || '' });
-        await setDoc(doc(db, 'settings', 'support_logo'), { supportLogo: supportLogo || '' });
+        await setDoc(doc(db, 'settings', 'landing_image'), cleanData({ landingImage: landingImage || '' }));
+        await setDoc(doc(db, 'settings', 'support_logo'), cleanData({ supportLogo: supportLogo || '' }));
       }
       
       // 2. Save individual user theme preference
       if (userProfile?.uid) {
-        await setDoc(doc(db, 'users', userProfile.uid), {
+        await setDoc(doc(db, 'users', userProfile.uid), cleanData({
           ...userProfile,
           theme: personalTheme
-        });
+        }));
       }
       
       alert('Settings saved successfully!');

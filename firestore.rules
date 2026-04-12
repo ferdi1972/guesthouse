@@ -14,9 +14,7 @@ service cloud.firestore {
       return isAuthenticated() && (
         request.auth.token.email in ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"] ||
         request.auth.token.email.matches("admin@qwai.*") ||
-        request.auth.uid in ["MJSsqJjxKTVcBYHP4bGx1F6Vh1w2", "Bmx9gwiexiSI5uaJ0d7qP2SHM0O2"] ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+        request.auth.uid in ["MJSsqJjxKTVcBYHP4bGx1F6Vh1w2", "Bmx9gwiexiSI5uaJ0d7qP2SHM0O2"]
       );
     }
 
@@ -249,7 +247,7 @@ service cloud.firestore {
 
     match /bookings/{bookingId} {
       allow read: if isAuthenticated();
-      allow create: if isStaff() && isValidBooking(request.resource.data);
+      allow create: if isStaff();
       allow update: if isAdmin() || (isStaff() && isBookingOperationalUpdate());
       allow delete: if isAdmin();
     }

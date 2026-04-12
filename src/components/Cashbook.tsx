@@ -21,7 +21,7 @@ import { CashbookEntry, TransactionType, Settings, Booking, Guest, UserProfile, 
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';
 import { auth } from '../firebase';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { exportDataToExcel, exportMultipleSheetsToExcel } from '../services/excelService';
 
 interface CashbookProps {
@@ -134,11 +134,11 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
     e.preventDefault();
     const path = editingEntry ? `cashbook/${editingEntry.id}` : 'cashbook';
     try {
-      const dataToSave = {
+      const dataToSave = cleanData({
         ...formData,
         category: isCustomCategory ? customCategory : formData.category,
         date: parseISO(formData.date).toISOString()
-      };
+      });
 
       if (editingEntry) {
         await updateDoc(doc(db, 'cashbook', editingEntry.id), dataToSave);
@@ -167,11 +167,11 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
     e.preventDefault();
     const path = editingBudget ? `budgets/${editingBudget.id}` : 'budgets';
     try {
-      const dataToSave = {
+      const dataToSave = cleanData({
         ...budgetFormData,
         category: isBudgetCustomCategory ? budgetCustomCategory : budgetFormData.category,
         createdAt: editingBudget ? editingBudget.createdAt : new Date().toISOString()
-      };
+      });
 
       if (editingBudget) {
         await updateDoc(doc(db, 'budgets', editingBudget.id), dataToSave);
@@ -1210,6 +1210,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                     className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all appearance-none"
                   >
                     <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
                     <option value="EFT">EFT</option>
                     <option value="Booking.com">Booking.com</option>
                     <option value="Lekkeslaap">Lekkeslaap</option>

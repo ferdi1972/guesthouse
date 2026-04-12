@@ -23,7 +23,7 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { DiaryEntry, Settings, UserProfile } from '../types';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { format } from 'date-fns';
 import { cn } from '../lib/utils';
 
@@ -63,14 +63,14 @@ export default function Diary({ settings, userProfile }: DiaryProps) {
     if (!auth.currentUser) return;
 
     try {
-      const entryData = {
+      const entryData = cleanData({
         title: newEntry.title,
         content: newEntry.content,
         date: newEntry.date,
         authorId: auth.currentUser.uid,
         authorName: userProfile?.displayName || auth.currentUser.email || 'Admin',
         createdAt: new Date().toISOString()
-      };
+      });
 
       await addDoc(collection(db, 'diary'), entryData);
       setIsAddModalOpen(false);

@@ -11,7 +11,7 @@ import {
 import { doc, setDoc, getDocs, collection, query, limit, getDoc } from 'firebase/firestore';
 import { Hotel, Mail, Lock, User, ArrowRight, Loader2, KeyRound, Chrome, ArrowLeft } from 'lucide-react';
 import { UserProfile } from '../types';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 
 interface AuthProps {
   onBack?: () => void;
@@ -98,14 +98,14 @@ export default function Auth({ onBack }: AuthProps) {
           return adminEmails.includes(email) || email.startsWith('admin@qwai');
         };
 
-        const newProfile: UserProfile = {
+        const newProfile: UserProfile = cleanData({
           uid: user.uid,
           email: user.email || '',
           displayName: user.displayName || user.email?.split('@')[0] || 'Guest',
           role: (isFirstUser || isAdminEmail(user.email || '')) ? 'admin' : 'user',
           theme: 'luxury',
           createdAt: new Date().toISOString()
-        };
+        }) as UserProfile;
 
         try {
           await setDoc(docRef, newProfile);
@@ -160,14 +160,14 @@ export default function Auth({ onBack }: AuthProps) {
           return adminEmails.includes(email) || email.startsWith('admin@qwai');
         };
 
-        const newProfile: UserProfile = {
+        const newProfile: UserProfile = cleanData({
           uid: user.uid,
           email: user.email || '',
           displayName: displayName || 'Guest',
           role: (isFirstUser || isAdminEmail(user.email || '')) ? 'admin' : 'user', 
           theme: 'luxury',
           createdAt: new Date().toISOString()
-        };
+        }) as UserProfile;
 
         try {
           await setDoc(doc(db, 'users', user.uid), newProfile);

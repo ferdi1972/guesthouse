@@ -19,7 +19,7 @@ import { db } from '../firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Room, RoomInventoryItem, Settings, UserProfile } from '../types';
 import { format, parseISO } from 'date-fns';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { cn } from '../lib/utils';
 
 interface InventoryProps {
@@ -73,11 +73,12 @@ export default function Inventory({ settings, userProfile }: InventoryProps) {
     if (!editingItem) return;
 
     try {
-      await updateDoc(doc(db, 'roomInventory', editingItem.id), {
+      const cleanedData = cleanData({
         name: editFormData.name,
         quantity: editFormData.quantity,
         lastUpdated: new Date().toISOString()
       });
+      await updateDoc(doc(db, 'roomInventory', editingItem.id), cleanedData);
       setEditingItem(null);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `roomInventory/${editingItem.id}`);

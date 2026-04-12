@@ -4,7 +4,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { UserProfile, AppTheme } from '../types';
 import { cn } from '../lib/utils';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ProfileModalProps {
@@ -50,11 +50,12 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
     setIsSaving(true);
 
     try {
-      await updateDoc(doc(db, 'users', userProfile.uid), {
+      const cleanedData = cleanData({
         displayName,
         photoURL,
         theme
       });
+      await updateDoc(doc(db, 'users', userProfile.uid), cleanedData);
       onClose();
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `users/${userProfile.uid}`);

@@ -20,7 +20,7 @@ import { Guest, UserProfile } from '../types';
 import { format } from 'date-fns';
 import { cn } from '../lib/utils';
 import { auth } from '../firebase';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 
 interface GuestsProps {
   userProfile: UserProfile | null;

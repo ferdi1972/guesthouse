@@ -50,3 +50,19 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }
+
+/**
+ * Removes undefined fields from an object to prevent Firestore errors.
+ * Firestore does not allow undefined values in documents.
+ */
+export function cleanData<T extends object>(data: T): T {
+  const cleaned = { ...data } as any;
+  Object.keys(cleaned).forEach(key => {
+    if (cleaned[key] === undefined) {
+      delete cleaned[key];
+    } else if (cleaned[key] !== null && typeof cleaned[key] === 'object' && !Array.isArray(cleaned[key])) {
+      cleaned[key] = cleanData(cleaned[key]);
+    }
+  });
+  return cleaned;
+}

@@ -39,7 +39,7 @@ import {
 } from 'date-fns';
 import { cn } from '../lib/utils';
 import { auth } from '../firebase';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 
 interface RoomsProps {
   settings: Settings | null;
@@ -171,14 +171,14 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const path = editingRoom ? `rooms/${editingRoom.id}` : 'rooms';
-    const dataToSave = {
+    const dataToSave = cleanData({
       ...formData,
       singleRate: Number(formData.singleRate) || 0,
       doubleRate: Number(formData.doubleRate) || 0,
       weekendSingleRate: Number(formData.weekendSingleRate) || 0,
       weekendDoubleRate: Number(formData.weekendDoubleRate) || 0,
       hourlyRate: Number(formData.hourlyRate) || 0,
-    };
+    });
     try {
       if (editingRoom) {
         await updateDoc(doc(db, 'rooms', editingRoom.id), dataToSave);

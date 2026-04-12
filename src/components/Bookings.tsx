@@ -32,7 +32,7 @@ import { format, differenceInDays, isBefore, startOfDay, parseISO, addDays } fro
 import { cn } from '../lib/utils';
 import { auth } from '../firebase';
 import ReceiptsList from './ReceiptsList';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 
 interface BookingsProps {
   settings: Settings | null;
@@ -149,13 +149,14 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const totalAmount = formData.manualAmount !== undefined ? formData.manualAmount : formData.totalAmount;
+    
+    // Clean up undefined values for Firestore
+    const dataToSave = cleanData({ ...formData, totalAmount });
+
     const path = editingBooking ? `bookings/${editingBooking.id}` : 'bookings';
     try {
       if (editingBooking) {
-        await updateDoc(doc(db, 'bookings', editingBooking.id), {
-          ...formData,
-          totalAmount
-        });
+        await updateDoc(doc(db, 'bookings', editingBooking.id), dataToSave);
 
         // Update corresponding cashbook entries if the date/time changed to keep them in sync
         if (formData.checkIn !== editingBooking.checkIn || formData.checkInTime !== editingBooking.checkInTime) {
@@ -183,8 +184,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
         }
       } else {
         await addDoc(collection(db, 'bookings'), {
-          ...formData,
-          totalAmount,
+          ...dataToSave,
           createdAt: new Date().toISOString()
         });
       }
@@ -1597,6 +1597,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                     className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all appearance-none"
                   >
                     <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
                     <option value="EFT">EFT</option>
                     <option value="Booking.com">Booking.com</option>
                     <option value="Lekkeslaap">Lekkeslaap</option>

@@ -20,7 +20,7 @@ import { format, parseISO, isAfter } from 'date-fns';
 import { cn } from '../lib/utils';
 import { auth } from '../firebase';
 import { Shield, UserCheck, UserCog } from 'lucide-react';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 
 interface StaffProps {
   settings: Settings | null;
@@ -126,11 +126,12 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
     e.preventDefault();
     const path = editingStaff ? `staff/${editingStaff.id}` : 'staff';
     try {
+      const cleanedData = cleanData(formData);
       if (editingStaff) {
-        await updateDoc(doc(db, 'staff', editingStaff.id), formData);
+        await updateDoc(doc(db, 'staff', editingStaff.id), cleanedData);
       } else {
         await addDoc(collection(db, 'staff'), {
-          ...formData,
+          ...cleanedData,
           lastPayoutDate: new Date().toISOString(),
           createdAt: new Date().toISOString()
         });

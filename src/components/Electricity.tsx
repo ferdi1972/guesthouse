@@ -18,7 +18,7 @@ import { db } from '../firebase';
 import { collection, onSnapshot, addDoc, deleteDoc, doc, query, orderBy, where, getDocs } from 'firebase/firestore';
 import { ElectricityReading, CashbookEntry, Settings } from '../types';
 import { format, startOfDay, endOfDay, subDays, isWithinInterval, parseISO } from 'date-fns';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { cn } from '../lib/utils';
 import { 
   LineChart, 
@@ -215,7 +215,7 @@ export default function Electricity({ settings }: ElectricityProps) {
     }
 
     try {
-      await addDoc(collection(db, 'electricity'), {
+      const cleanedData = cleanData({
         date: new Date(formData.date).toISOString(),
         startReading: formData.startReading,
         endReading: formData.endReading,
@@ -224,6 +224,7 @@ export default function Electricity({ settings }: ElectricityProps) {
         notes: formData.notes,
         createdAt: new Date().toISOString()
       });
+      await addDoc(collection(db, 'electricity'), cleanedData);
       setIsModalOpen(false);
       setFormData({
         date: format(new Date(), 'yyyy-MM-dd'),

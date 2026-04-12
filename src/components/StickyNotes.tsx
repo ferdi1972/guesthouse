@@ -19,7 +19,7 @@ import {
   updateDoc
 } from 'firebase/firestore';
 import { StickyNote, UserProfile } from '../types';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -56,12 +56,12 @@ export default function StickyNotes({ userProfile }: { userProfile: UserProfile 
     if (!newNoteContent.trim() || !auth.currentUser) return;
 
     try {
-      const noteData = {
+      const noteData = cleanData({
         content: newNoteContent,
         color: selectedColor.name,
         authorId: auth.currentUser.uid,
         createdAt: new Date().toISOString()
-      };
+      });
 
       await addDoc(collection(db, 'stickyNotes'), noteData);
       setNewNoteContent('');

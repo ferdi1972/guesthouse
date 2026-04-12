@@ -31,7 +31,7 @@ import {
 } from 'firebase/firestore';
 import { Contact } from '../types';
 import { format } from 'date-fns';
-import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
+import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 
 export default function Contacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -76,14 +76,15 @@ export default function Contacts() {
     if (!auth.currentUser) return;
 
     try {
+      const cleanedData = cleanData(formData);
       if (editingContact) {
         await updateDoc(doc(db, 'contacts', editingContact.id), {
-          ...formData,
+          ...cleanedData,
           updatedAt: serverTimestamp()
         });
       } else {
         await addDoc(collection(db, 'contacts'), {
-          ...formData,
+          ...cleanedData,
           authorId: auth.currentUser.uid,
           createdAt: new Date().toISOString()
         });
