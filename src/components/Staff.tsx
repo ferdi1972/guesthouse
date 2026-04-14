@@ -59,7 +59,7 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
       setUsers(snap.docs
         .map(doc => ({ ...doc.data() } as UserProfile))
-        .filter(u => u.email !== 'admin@qwai.co.za')
+        .filter(u => u.uid !== auth.currentUser?.uid)
       );
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'users');

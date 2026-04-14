@@ -129,7 +129,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
       const querySnapshot = await getDocs(collection(db, 'users'));
       setUsers(querySnapshot.docs
         .map(doc => doc.data() as UserProfile)
-        .filter(u => u.email !== 'admin@qwai.co.za')
+        .filter(u => u.uid !== auth.currentUser?.uid)
       );
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, 'users');
@@ -437,7 +437,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
                   </div>
                   <button
                     type="button"
-                    onClick={handleBackup}
+                    onClick={() => handleBackup().catch(() => {})}
                     disabled={isBackingUp || isRestoring}
                     className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
                   >
@@ -491,7 +491,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
                   </div>
                   <button
                     type="button"
-                    onClick={handleExportExcel}
+                    onClick={() => handleExportExcel().catch(() => {})}
                     disabled={isExporting || isBackingUp || isRestoring}
                     className="w-full bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
                   >
@@ -610,7 +610,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
                 </p>
                 <div className="flex flex-col gap-3">
                   <button
-                    onClick={handleFactoryReset}
+                    onClick={() => handleFactoryReset().catch(() => {})}
                     disabled={isFactoryResetting}
                     className="w-full bg-rose-600 text-white py-4 rounded-2xl font-bold hover:bg-rose-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-200 disabled:opacity-50"
                   >
@@ -649,7 +649,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
                 <div className="flex flex-col gap-3">
                   <button
                     onClick={() => {
-                      if (pendingRestoreFile) handleRestore(pendingRestoreFile);
+                      if (pendingRestoreFile) handleRestore(pendingRestoreFile).catch(() => {});
                       setShowRestoreConfirm(false);
                     }}
                     className="w-full bg-primary text-primary-foreground py-4 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg"

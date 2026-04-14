@@ -1814,7 +1814,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleCheckIn(selectedBooking);
+                      handleCheckIn(selectedBooking).catch(() => {});
                       setIsDetailsModalOpen(false);
                     }}
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl font-bold hover:bg-emerald-100 transition-all text-sm"
@@ -1826,7 +1826,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleCheckOut(selectedBooking);
+                      handleCheckOut(selectedBooking).catch(() => {});
                       setIsDetailsModalOpen(false);
                     }}
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold hover:bg-rose-100 transition-all text-sm"
@@ -1866,7 +1866,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleGenerateReceipt(selectedBooking);
+                      handleGenerateReceipt(selectedBooking).catch(() => {});
                       setIsDetailsModalOpen(false);
                     }}
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-stone-100 text-stone-600 rounded-xl font-bold hover:bg-stone-200 transition-all text-sm"
