@@ -411,7 +411,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={(e) => handleSubmit(e).catch(() => {})} className="space-y-8">
         {/* Data Management */}
         {(userProfile?.role === 'admin' || userProfile?.role === 'manager') && (activeSection === 'backup' || !activeSection) && (
           <div className="bg-background rounded-3xl border border-border shadow-sm overflow-hidden">

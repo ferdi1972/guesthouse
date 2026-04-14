@@ -1091,7 +1091,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={(e) => handleSubmit(e).catch(() => {})} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between ml-1">
@@ -1451,7 +1451,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 Cancel
               </button>
               <button
-                onClick={handleDelete}
+                onClick={() => handleDelete().catch(() => {})}
                 className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
               >
                 Delete
@@ -1473,7 +1473,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleSubmitGuest} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={(e) => handleSubmitGuest(e).catch(() => {})} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Full Name</label>
@@ -1568,7 +1568,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleCollectPayment} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={(e) => handleCollectPayment(e).catch(() => {})} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
@@ -1669,7 +1669,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleRefund} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={(e) => handleRefund(e).catch(() => {})} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">

@@ -445,12 +445,14 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                         </div>
                         {userProfile?.role === 'admin' && (
                           <button
-                            onClick={async () => {
-                              try {
-                                await updateDoc(doc(db, 'rooms', room.id), { maintenanceNotes: '' });
-                              } catch (error) {
-                                handleFirestoreError(error, OperationType.UPDATE, `rooms/${room.id}`);
-                              }
+                            onClick={() => {
+                              (async () => {
+                                try {
+                                  await updateDoc(doc(db, 'rooms', room.id), { maintenanceNotes: '' });
+                                } catch (error) {
+                                  handleFirestoreError(error, OperationType.UPDATE, `rooms/${room.id}`);
+                                }
+                              })().catch(() => {});
                             }}
                             className="text-[9px] font-bold uppercase tracking-wider text-rose-600 hover:text-rose-800 transition-colors flex items-center gap-1"
                           >
@@ -470,26 +472,28 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                       {userProfile?.role === 'admin' && (
                         <button
                           disabled={syncingRoomId === room.id}
-                          onClick={async () => {
-                            try {
-                              setSyncingRoomId(room.id);
-                              const response = await fetch(`/api/rooms/${room.id}/sync`, { method: 'POST' });
-                              const data = await response.json();
-                              if (data.success) {
-                                let message = `Sync successful! Imported ${data.newBookingsCount} new bookings.`;
-                                if (data.errors && data.errors.length > 0) {
-                                  message += `\n\nSome sources had issues:\n- ${data.errors.join('\n- ')}`;
+                          onClick={() => {
+                            (async () => {
+                              try {
+                                setSyncingRoomId(room.id);
+                                const response = await fetch(`/api/rooms/${room.id}/sync`, { method: 'POST' });
+                                const data = await response.json();
+                                if (data.success) {
+                                  let message = `Sync successful! Imported ${data.newBookingsCount} new bookings.`;
+                                  if (data.errors && data.errors.length > 0) {
+                                    message += `\n\nSome sources had issues:\n- ${data.errors.join('\n- ')}`;
+                                  }
+                                  alert(message);
+                                } else {
+                                  alert(`Sync failed: ${data.message || 'Unknown error'}`);
                                 }
-                                alert(message);
-                              } else {
-                                alert(`Sync failed: ${data.message || 'Unknown error'}`);
+                              } catch (error) {
+                                console.error('Sync error:', error);
+                                alert('Failed to sync. Please check URLs and server logs.');
+                              } finally {
+                                setSyncingRoomId(null);
                               }
-                            } catch (error) {
-                              console.error('Sync error:', error);
-                              alert('Failed to sync. Please check URLs and server logs.');
-                            } finally {
-                              setSyncingRoomId(null);
-                            }
+                            })().catch(() => {});
                           }}
                           className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1.5 rounded-lg ${
                             syncingRoomId === room.id 
@@ -563,12 +567,14 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                     </button>
                     {room.status === 'Cleaning' && (
                       <button
-                        onClick={async () => {
-                          try {
-                            await updateDoc(doc(db, 'rooms', room.id), { status: 'Available' });
-                          } catch (error) {
-                            handleFirestoreError(error, OperationType.UPDATE, `rooms/${room.id}`);
-                          }
+                        onClick={() => {
+                          (async () => {
+                            try {
+                              await updateDoc(doc(db, 'rooms', room.id), { status: 'Available' });
+                            } catch (error) {
+                              handleFirestoreError(error, OperationType.UPDATE, `rooms/${room.id}`);
+                            }
+                          })().catch(() => {});
                         }}
                         className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors p-1.5 hover:bg-emerald-50 rounded-lg"
                       >
@@ -616,7 +622,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
             </div>
             <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
               {userProfile?.role === 'admin' && (
-                <form onSubmit={handleAddInventory} className="flex gap-4 mb-8">
+                <form onSubmit={(e) => handleAddInventory(e).catch(() => {})} className="flex gap-4 mb-8">
                   <div className="flex-1 space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Item Name</label>
                     <input
@@ -668,7 +674,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                           {userProfile?.role === 'admin' ? (
                             <>
                               <button 
-                                onClick={() => handleUpdateInventory(item.id, Math.max(0, item.quantity - 1))}
+                                onClick={() => handleUpdateInventory(item.id, Math.max(0, item.quantity - 1)).catch(() => {})}
                                 className="p-1 hover:bg-white rounded transition-colors text-stone-500"
                               >
                                 <Minus className="w-4 h-4" />
@@ -677,7 +683,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                                 {item.quantity}
                               </span>
                               <button 
-                                onClick={() => handleUpdateInventory(item.id, item.quantity + 1)}
+                                onClick={() => handleUpdateInventory(item.id, item.quantity + 1).catch(() => {})}
                                 className="p-1 hover:bg-white rounded transition-colors text-stone-500"
                               >
                                 <PlusIcon className="w-4 h-4" />
@@ -691,7 +697,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                         </div>
                         {userProfile?.role === 'admin' && (
                           <button 
-                            onClick={() => handleDeleteInventory(item.id)}
+                            onClick={() => handleDeleteInventory(item.id).catch(() => {})}
                             className="p-2 text-stone-400 hover:text-rose-600 transition-colors"
                           >
                             <Trash className="w-4 h-4" />
@@ -786,7 +792,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={(e) => handleSubmit(e).catch(() => {})} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Room Number</label>
@@ -992,7 +998,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   Cancel
                 </button>
                 <button
-                  onClick={handleDelete}
+                  onClick={() => handleDelete().catch(() => {})}
                   className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
                 >
                   Delete

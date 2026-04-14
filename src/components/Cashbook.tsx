@@ -1105,7 +1105,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={(e) => handleSubmit(e).catch(() => {})} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="flex p-1 bg-stone-100 rounded-xl mb-6">
                 <button
                   type="button"
@@ -1264,7 +1264,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleBudgetSubmit} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={(e) => handleBudgetSubmit(e).catch(() => {})} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Month</label>
@@ -1380,7 +1380,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                   Cancel
                 </button>
                 <button
-                  onClick={handleDelete}
+                  onClick={() => handleDelete().catch(() => {})}
                   className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
                 >
                   Delete
@@ -1410,7 +1410,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                 Cancel
               </button>
               <button
-                onClick={handleBudgetDelete}
+                onClick={() => handleBudgetDelete().catch(() => {})}
                 className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
               >
                 Delete

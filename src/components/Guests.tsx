@@ -326,7 +326,7 @@ export default function Guests({ userProfile }: GuestsProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={(e) => handleSubmit(e).catch(() => {})} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="flex flex-col items-center gap-4 mb-6">
                 <div className="relative group">
                   <div className="w-24 h-24 rounded-2xl bg-stone-100 border-2 border-dashed border-stone-200 flex items-center justify-center overflow-hidden">
@@ -487,7 +487,7 @@ export default function Guests({ userProfile }: GuestsProps) {
                   Cancel
                 </button>
                 <button
-                  onClick={handleDelete}
+                  onClick={() => handleDelete().catch(() => {})}
                   className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
                 >
                   Delete

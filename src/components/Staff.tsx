@@ -500,7 +500,7 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
               </button>
             </div>
             <div className="overflow-y-auto custom-scrollbar">
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              <form onSubmit={(e) => handleSubmit(e).catch(() => {})} className="p-8 space-y-6">
                 <div className="space-y-4">
                   <div className="flex flex-col items-center gap-4 py-4">
                     <div className="relative group">
@@ -639,16 +639,14 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
                   Cancel
                 </button>
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     if (!staffToDelete) return;
                     const id = staffToDelete;
                     setIsDeleteConfirmOpen(false);
                     setStaffToDelete(null);
-                    try {
-                      await deleteDoc(doc(db, 'staff', id));
-                    } catch (error) {
+                    deleteDoc(doc(db, 'staff', id)).catch(error => {
                       handleFirestoreError(error, OperationType.DELETE, `staff/${id}`);
-                    }
+                    });
                   }}
                   className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
                 >
@@ -684,16 +682,14 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
                   Cancel
                 </button>
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     if (!userToDelete) return;
                     const uid = userToDelete.uid;
                     setIsUserDeleteConfirmOpen(false);
                     setUserToDelete(null);
-                    try {
-                      await deleteDoc(doc(db, 'users', uid));
-                    } catch (error) {
+                    deleteDoc(doc(db, 'users', uid)).catch(error => {
                       handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
-                    }
+                    });
                   }}
                   className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
                 >
