@@ -136,6 +136,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
     try {
       const dataToSave = cleanData({
         ...formData,
+        amount: isNaN(formData.amount) ? 0 : formData.amount,
         category: isCustomCategory ? customCategory : formData.category,
         date: parseISO(formData.date).toISOString()
       });
@@ -169,6 +170,7 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
     try {
       const dataToSave = cleanData({
         ...budgetFormData,
+        amount: isNaN(budgetFormData.amount) ? 0 : budgetFormData.amount,
         category: isBudgetCustomCategory ? budgetCustomCategory : budgetFormData.category,
         createdAt: editingBudget ? editingBudget.createdAt : new Date().toISOString()
       });

@@ -108,7 +108,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
     } else {
       const start = new Date(formData.checkIn);
       const end = new Date(formData.checkOut);
-      const nights = Math.max(1, differenceInDays(end, start));
+      const diff = differenceInDays(end, start);
+      const nights = isNaN(diff) ? 1 : Math.max(1, diff);
       
       let rate = 0;
       if (formData.rateType === 'Single') rate = room.singleRate;
@@ -118,6 +119,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       else if (formData.rateType === 'Manual') rate = formData.manualRate || 0;
       
       total = nights * rate;
+      if (isNaN(total)) total = 0;
     }
     setFormData(prev => ({ ...prev, totalAmount: total }));
   }, [formData.roomId, formData.rateType, formData.hours, formData.checkIn, formData.checkOut, formData.manualRate, rooms]);
@@ -148,7 +150,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const totalAmount = formData.manualAmount !== undefined ? formData.manualAmount : formData.totalAmount;
+    let totalAmount = formData.manualAmount !== undefined ? formData.manualAmount : formData.totalAmount;
+    if (isNaN(totalAmount)) totalAmount = 0;
     
     // Clean up undefined values for Firestore
     const dataToSave = cleanData({ ...formData, totalAmount });
@@ -263,10 +266,11 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
       // Use the booking's check-in date and time for the cashbook entry to support back-dating
       const bookingDate = new Date(`${paymentBooking.checkIn}T${paymentBooking.checkInTime || '14:00'}`);
       
+      // Create cashbook entry
       await addDoc(collection(db, 'cashbook'), {
         date: bookingDate.toISOString(),
         description: `Payment for Booking - ${getGuestName(paymentBooking.guestId)} (Room ${getRoomNumber(paymentBooking.roomId)})`,
-        amount: paymentAmount,
+        amount: Number(paymentAmount) || 0,
         type: 'Income',
         category: 'Accommodation',
         bookingId: paymentBooking.id,
@@ -969,7 +973,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleCheckIn(booking);
+                            handleCheckIn(booking).catch(() => {});
                           }}
                           className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl transition-all"
                         >
@@ -980,7 +984,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleCheckOut(booking);
+                            handleCheckOut(booking).catch(() => {});
                           }}
                           className="p-2.5 bg-rose-50 text-rose-600 rounded-xl transition-all"
                         >
@@ -1353,13 +1357,20 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                     <span className="text-2xl font-serif font-bold text-stone-900">{settings?.currency || '$'}</span>
                     <input
                       type="number"
-                      value={formData.totalAmount || ''}
-                      onChange={(e) => setFormData({ ...formData, totalAmount: Number(e.target.value) })}
+                      value={formData.manualAmount !== undefined ? formData.manualAmount : (formData.totalAmount || '')}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? undefined : Number(e.target.value);
+                        if (formData.rateType === 'Hourly' || formData.rateType === 'Manual') {
+                          setFormData({ ...formData, totalAmount: val || 0 });
+                        } else {
+                          setFormData({ ...formData, manualAmount: val });
+                        }
+                      }}
                       className={cn(
                         "text-2xl font-serif font-bold text-stone-900 bg-transparent border-none p-0 focus:ring-0 w-32",
-                        (formData.rateType !== 'Hourly' && formData.rateType !== 'Manual') && "pointer-events-none"
+                        (formData.rateType !== 'Hourly' && formData.rateType !== 'Manual' && formData.manualAmount === undefined) && "pointer-events-none"
                       )}
-                      readOnly={formData.rateType !== 'Hourly' && formData.rateType !== 'Manual'}
+                      readOnly={formData.rateType !== 'Hourly' && formData.rateType !== 'Manual' && formData.manualAmount === undefined}
                     />
                   </div>
                 </div>
@@ -1570,11 +1581,31 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                   </div>
                 </div>
                 
-                <div className="p-4 bg-stone-900 rounded-2xl text-white">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Balance Remaining</p>
-                  <p className="text-2xl font-mono font-bold">
-                    {settings?.currency || '$'} {((paymentBooking?.totalAmount || 0) - (paymentBooking?.paidAmount || 0)).toLocaleString()}
-                  </p>
+                <div className="p-5 bg-stone-900 rounded-2xl text-white shadow-xl">
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Current Balance</p>
+                      <p className="text-2xl font-mono font-bold">
+                        {settings?.currency || '$'} {((paymentBooking?.totalAmount || 0) - (paymentBooking?.paidAmount || 0)).toLocaleString()}
+                      </p>
+                    </div>
+                    {paymentAmount > 0 && (
+                      <div className="text-right animate-in fade-in slide-in-from-right-4 duration-500">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-1">New Balance</p>
+                        <p className="text-2xl font-mono font-bold text-emerald-400">
+                          {settings?.currency || '$'} {Math.max(0, (paymentBooking?.totalAmount || 0) - ((paymentBooking?.paidAmount || 0) + paymentAmount)).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 transition-all duration-500"
+                      style={{ 
+                        width: `${Math.min(100, (paymentAmount / ((paymentBooking?.totalAmount || 0) - (paymentBooking?.paidAmount || 0))) * 100)}%` 
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1582,6 +1613,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                   <input
                     required
                     type="number"
+                    min="0"
                     max={(paymentBooking?.totalAmount || 0) - (paymentBooking?.paidAmount || 0)}
                     value={paymentAmount}
                     onChange={(e) => setPaymentAmount(Number(e.target.value))}

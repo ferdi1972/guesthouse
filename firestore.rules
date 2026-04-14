@@ -13,7 +13,7 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && (
         request.auth.token.email in ["ferditviljoen@gmail.com", "admin@qwai-enterprises.co.za", "admin@qwai.co.za"] ||
-        request.auth.token.email.matches("admin@qwai.*") ||
+        (request.auth.token.email != null && request.auth.token.email.matches("admin@qwai.*")) ||
         request.auth.uid in ["MJSsqJjxKTVcBYHP4bGx1F6Vh1w2", "Bmx9gwiexiSI5uaJ0d7qP2SHM0O2"]
       );
     }
@@ -247,15 +247,16 @@ service cloud.firestore {
 
     match /bookings/{bookingId} {
       allow read: if isAuthenticated();
-      allow create: if isStaff();
-      allow update: if isAdmin() || (isStaff() && isBookingOperationalUpdate());
+      allow create: if isStaff() && isValidBooking(request.resource.data);
+      allow update: if isAdmin() || (isStaff() && isBookingOperationalUpdate() && isValidBooking(request.resource.data));
       allow delete: if isAdmin();
     }
 
     match /cashbook/{entryId} {
       allow read: if isAuthenticated();
       allow create: if isStaff() && isValidCashbookEntry(request.resource.data);
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() && isValidCashbookEntry(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /diary/{entryId} {
