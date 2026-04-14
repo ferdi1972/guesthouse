@@ -54,6 +54,7 @@
         "totalAmount": { "type": "number" },
         "manualAmount": { "type": "number" },
         "company": { "type": "string" },
+        "referenceNumber": { "type": "string" },
         "isPaid": { "type": "boolean" },
         "status": { "type": "string", "enum": ["Confirmed", "CheckedIn", "CheckedOut", "Cancelled", "External"] },
         "externalSource": { "type": "string", "description": "Source of external booking (e.g. Booking.com)" },
@@ -141,6 +142,7 @@
         "bookingId": { "type": "string" },
         "guestId": { "type": "string" },
         "guestName": { "type": "string" },
+        "referenceNumber": { "type": "string" },
         "amount": { "type": "number" },
         "date": { "type": "string", "format": "date-time" },
         "items": {

@@ -57,6 +57,7 @@ export interface Booking {
   manualAmount?: number;
   manualRate?: number;
   company?: string;
+  referenceNumber?: string;
   paidAmount?: number;
   isPaid?: boolean;
   status: BookingStatus;
@@ -131,6 +132,7 @@ export interface Receipt {
   bookingId: string;
   guestId: string;
   guestName: string;
+  referenceNumber?: string;
   companyName?: string;
   companyAddress?: string;
   companyPhone?: string;

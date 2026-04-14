@@ -91,6 +91,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
     manualAmount: undefined as number | undefined,
     manualRate: undefined as number | undefined,
     company: '',
+    referenceNumber: '',
   });
 
   useEffect(() => {
@@ -364,11 +365,12 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
     const isPartialReceipt = specificAmount !== undefined && specificAmount < booking.totalAmount;
     const receiptAmount = specificAmount !== undefined ? specificAmount : (booking.paidAmount || booking.totalAmount);
     
-    const receiptData: Omit<Receipt, 'id'> = {
+      const receiptData: Omit<Receipt, 'id'> = {
       receiptNumber,
       bookingId: booking.id,
       guestId: guest.id,
       guestName: guest.name,
+      referenceNumber: booking.referenceNumber || '',
       companyName: settings?.companyName || 'My Guesthouse',
       companyAddress: settings?.address || '',
       companyPhone: settings?.phone || '',
@@ -537,7 +539,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
           <h1 className="text-2xl sm:text-3xl font-serif italic text-stone-900">Bookings</h1>
           <p className="text-stone-500 text-sm">Manage reservations and guest stays.</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <div className="flex bg-stone-100 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab('list')}
@@ -574,7 +576,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                 totalAmount: 0,
                 manualAmount: undefined,
                 manualRate: undefined,
-                company: ''
+                company: '',
+                referenceNumber: ''
               });
               setIsModalOpen(true);
             }}
@@ -856,7 +859,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                                       totalAmount: booking.totalAmount,
                                       manualAmount: booking.manualAmount,
                                       manualRate: booking.manualRate,
-                                      company: booking.company || ''
+                                      company: booking.company || '',
+                                      referenceNumber: booking.referenceNumber || ''
                                     });
                                     setIsModalOpen(true);
                                   }}
@@ -1048,7 +1052,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                               totalAmount: booking.totalAmount,
                               manualAmount: booking.manualAmount,
                               manualRate: booking.manualRate,
-                              company: booking.company || ''
+                              company: booking.company || '',
+                              referenceNumber: booking.referenceNumber || ''
                             });
                             setIsModalOpen(true);
                           }}
@@ -1195,7 +1200,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Company / Source</label>
                     <input
@@ -1203,12 +1208,22 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                       value={formData.company || ''}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                       className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
-                      placeholder="e.g. Booking.com, Corporate..."
+                      placeholder="e.g. Booking.com..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Reference Number</label>
+                    <input
+                      type="text"
+                      value={formData.referenceNumber || ''}
+                      onChange={(e) => setFormData({ ...formData, referenceNumber: e.target.value })}
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                      placeholder="e.g. REF-123..."
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">
-                      {formData.rateType === 'Manual' ? 'Manual Rate per Night' : 'Manual Amount Override'}
+                      {formData.rateType === 'Manual' ? 'Manual Rate' : 'Override Amount'}
                     </label>
                     <input
                       type="number"
@@ -1222,7 +1237,7 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                         }
                       }}
                       className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
-                      placeholder={formData.rateType === 'Manual' ? "Enter rate per night..." : "Enter amount to override..."}
+                      placeholder={formData.rateType === 'Manual' ? "Rate..." : "Amount..."}
                     />
                   </div>
                 </div>
@@ -1878,7 +1893,8 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
                           totalAmount: selectedBooking.totalAmount,
                           manualAmount: selectedBooking.manualAmount,
                           manualRate: selectedBooking.manualRate,
-                          company: selectedBooking.company || ''
+                          company: selectedBooking.company || '',
+                          referenceNumber: selectedBooking.referenceNumber || ''
                         });
                         setIsModalOpen(true);
                         setIsDetailsModalOpen(false);
@@ -1959,6 +1975,9 @@ export default function Bookings({ settings, userProfile }: BookingsProps) {
               <div className="mb-8">
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Bill To</h4>
                 <p className="text-base font-medium text-stone-900">{generatedReceipt.guestName}</p>
+                {generatedReceipt.referenceNumber && (
+                  <p className="text-xs text-stone-500 mt-1">Ref: {generatedReceipt.referenceNumber}</p>
+                )}
               </div>
 
               {(generatedReceipt.checkIn || generatedReceipt.checkOut) && (

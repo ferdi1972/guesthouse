@@ -223,7 +223,7 @@ export default function Contacts() {
                   <Edit2 className="w-4 h-4" />
                 </button>
                 <button 
-                  onClick={() => handleDelete(contact.id)}
+                  onClick={() => handleDelete(contact.id).catch(() => {})}
                   disabled={isDeleting === contact.id}
                   className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all"
                 >
@@ -343,7 +343,7 @@ export default function Contacts() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8">
+            <form onSubmit={(e) => handleSubmit(e).catch(() => {})} className="p-8">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Full Name *</label>

@@ -184,7 +184,7 @@ export default function Diary({ settings, userProfile }: DiaryProps) {
                       <h3 className="text-xl font-serif italic text-primary">{entry.title}</h3>
                     </div>
                     <button
-                      onClick={() => handleDeleteEntry(entry.id)}
+                      onClick={() => handleDeleteEntry(entry.id).catch(() => {})}
                       className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -215,7 +215,7 @@ export default function Diary({ settings, userProfile }: DiaryProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleAddEntry} className="p-6 space-y-4">
+            <form onSubmit={(e) => handleAddEntry(e).catch(() => {})} className="p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">

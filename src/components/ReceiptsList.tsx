@@ -365,9 +365,14 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                       {receipt.receiptNumber}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-stone-400" />
-                        <span className="text-sm font-medium text-stone-700">{receipt.guestName}</span>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-stone-400" />
+                          <span className="text-sm font-medium text-stone-700">{receipt.guestName}</span>
+                        </div>
+                        {receipt.referenceNumber && (
+                          <span className="text-[10px] text-stone-400 uppercase tracking-wider ml-6">Ref: {receipt.referenceNumber}</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -394,6 +399,7 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                               setEditingReceipt(receipt);
                               setEditFormData({
                                 guestName: receipt.guestName,
+                                referenceNumber: receipt.referenceNumber || '',
                                 date: receipt.date,
                                 items: receipt.items,
                                 totalAmount: receipt.totalAmount || receipt.amount,
@@ -489,6 +495,7 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                           setEditingReceipt(receipt);
                           setEditFormData({
                             guestName: receipt.guestName,
+                            referenceNumber: receipt.referenceNumber || '',
                             date: receipt.date,
                             items: receipt.items,
                             totalAmount: receipt.totalAmount || receipt.amount,
@@ -549,7 +556,7 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
               </button>
             </div>
             
-            <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            <form onSubmit={(e) => handleEditSubmit(e).catch(() => {})} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Guest Name</label>
@@ -559,6 +566,16 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                     value={editFormData.guestName || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, guestName: e.target.value })}
                     className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Reference Number</label>
+                  <input
+                    type="text"
+                    value={editFormData.referenceNumber || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, referenceNumber: e.target.value })}
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                    placeholder="e.g. REF-123..."
                   />
                 </div>
                 <div className="space-y-2">
@@ -717,7 +734,7 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleDelete(receiptToDelete)}
+                  onClick={() => handleDelete(receiptToDelete).catch(() => {})}
                   className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all text-sm"
                 >
                   Delete
@@ -778,6 +795,9 @@ export default function ReceiptsList({ settings, userProfile }: ReceiptsListProp
               <div className="mb-8">
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Bill To</h4>
                 <p className="text-base font-medium text-stone-900">{selectedReceipt.guestName}</p>
+                {selectedReceipt.referenceNumber && (
+                  <p className="text-xs text-stone-500 mt-1">Ref: {selectedReceipt.referenceNumber}</p>
+                )}
               </div>
 
               {(selectedReceipt.checkIn || selectedReceipt.checkOut) && (

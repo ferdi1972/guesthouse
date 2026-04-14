@@ -73,6 +73,7 @@ service cloud.firestore {
              (!('manualAmount' in data) || data.manualAmount is number) &&
              (!('manualRate' in data) || data.manualRate is number) &&
              (!('company' in data) || (data.company is string && data.company.size() < 200)) &&
+             (!('referenceNumber' in data) || (data.referenceNumber is string && data.referenceNumber.size() < 100)) &&
              (!('paidAmount' in data) || data.paidAmount is number) &&
              (!('isPaid' in data) || data.isPaid is bool) &&
              (!('status' in data) || data.status in ['Confirmed', 'CheckedIn', 'CheckedOut', 'Cancelled', 'External']) &&
@@ -140,6 +141,7 @@ service cloud.firestore {
              data.guestName is string &&
              data.amount is number && data.amount >= 0 &&
              data.date is string &&
+             (!('referenceNumber' in data) || (data.referenceNumber is string && data.referenceNumber.size() < 100)) &&
              (!('paymentMethod' in data) || data.paymentMethod is string) &&
              (!('notes' in data) || data.notes is string) &&
              (!('items' in data) || data.items is list) &&

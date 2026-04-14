@@ -93,7 +93,7 @@ export default function ProfileModal({ isOpen, onClose, userProfile }: ProfileMo
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6 md:space-y-8 overflow-y-auto custom-scrollbar">
+            <form onSubmit={(e) => handleSubmit(e).catch(() => {})} className="p-6 md:p-8 space-y-6 md:space-y-8 overflow-y-auto custom-scrollbar">
               {/* Profile Picture */}
               <div className="flex flex-col items-center gap-4">
                 <div className="relative group">

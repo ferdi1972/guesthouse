@@ -296,7 +296,7 @@ export default function Inventory({ settings, userProfile }: InventoryProps) {
               </button>
             </div>
             <div className="overflow-y-auto custom-scrollbar">
-              <form onSubmit={handleUpdateItem} className="p-8 space-y-6">
+              <form onSubmit={(e) => handleUpdateItem(e).catch(() => {})} className="p-8 space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Item Name</label>
                   <input
@@ -376,7 +376,7 @@ export default function Inventory({ settings, userProfile }: InventoryProps) {
                   Cancel
                 </button>
                 <button
-                  onClick={handleDeleteItem}
+                  onClick={() => handleDeleteItem().catch(() => {})}
                   className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/10"
                 >
                   Delete

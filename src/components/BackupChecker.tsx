@@ -60,7 +60,7 @@ export default function BackupChecker({ settings }: BackupCheckerProps) {
               Your scheduled backup is due. Download a copy of your data now to keep it safe.
             </p>
             <button
-              onClick={handleRunBackup}
+              onClick={() => handleRunBackup().catch(() => {})}
               disabled={isBackingUp}
               className="w-full bg-stone-900 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-stone-800 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
             >

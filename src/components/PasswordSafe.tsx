@@ -219,7 +219,7 @@ export default function PasswordSafe({ settings, userProfile }: PasswordSafeProp
                       )}
                     </div>
                     <button
-                      onClick={() => handleDeleteEntry(entry.id)}
+                      onClick={() => handleDeleteEntry(entry.id).catch(() => {})}
                       className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -291,7 +291,7 @@ export default function PasswordSafe({ settings, userProfile }: PasswordSafeProp
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleAddEntry} className="p-6 space-y-4">
+            <form onSubmit={(e) => handleAddEntry(e).catch(() => {})} className="p-6 space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
                   Title / Service Name

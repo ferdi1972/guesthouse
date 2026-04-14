@@ -152,7 +152,7 @@ export default function StickyNotes({ userProfile }: { userProfile: UserProfile 
                     <X className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={handleAddNote}
+                    onClick={() => handleAddNote().catch(() => {})}
                     disabled={!newNoteContent.trim()}
                     className="p-2 bg-primary text-primary-foreground rounded-xl hover:opacity-90 transition-all disabled:opacity-50"
                   >
@@ -190,7 +190,7 @@ export default function StickyNotes({ userProfile }: { userProfile: UserProfile 
                     {new Date(note.createdAt).toLocaleDateString()}
                   </span>
                   <button
-                    onClick={() => handleDeleteNote(note.id)}
+                    onClick={() => handleDeleteNote(note.id).catch(() => {})}
                     className="p-2 rounded-xl hover:bg-black/5 text-destructive transition-all"
                   >
                     <Trash2 className="w-4 h-4" />

@@ -516,7 +516,7 @@ export default function App() {
               </div>
             </button>
             <button
-              onClick={handleLogout}
+              onClick={() => handleLogout()}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:opacity-80"
               style={{ color: 'var(--sidebar-foreground)' }}
             >

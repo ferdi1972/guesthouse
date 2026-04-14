@@ -235,7 +235,7 @@ export default function Reminders({ settings, userProfile }: RemindersProps) {
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex items-start gap-3">
                       <button
-                        onClick={() => toggleStatus(reminder)}
+                        onClick={() => toggleStatus(reminder).catch(() => {})}
                         className={cn(
                           "mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
                           reminder.status === 'completed' 
@@ -265,7 +265,7 @@ export default function Reminders({ settings, userProfile }: RemindersProps) {
                       </div>
                     </div>
                     <button
-                      onClick={() => handleDeleteReminder(reminder.id)}
+                      onClick={() => handleDeleteReminder(reminder.id).catch(() => {})}
                       className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -313,7 +313,7 @@ export default function Reminders({ settings, userProfile }: RemindersProps) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <form onSubmit={handleAddReminder} className="p-6 space-y-4">
+            <form onSubmit={(e) => handleAddReminder(e).catch(() => {})} className="p-6 space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 px-1">
                   Title

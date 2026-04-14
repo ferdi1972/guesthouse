@@ -561,7 +561,7 @@ export default function Electricity({ settings }: ElectricityProps) {
             </div>
 
             <div className="overflow-y-auto custom-scrollbar">
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              <form onSubmit={(e) => handleSubmit(e).catch(() => {})} className="p-8 space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Reading Date</label>
@@ -676,7 +676,7 @@ export default function Electricity({ settings }: ElectricityProps) {
               </p>
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={handleDelete}
+                  onClick={() => handleDelete().catch(() => {})}
                   className="w-full bg-rose-600 text-white py-4 rounded-2xl font-bold hover:bg-rose-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-200"
                 >
                   <Trash2 className="w-5 h-5" />
