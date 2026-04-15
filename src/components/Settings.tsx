@@ -909,7 +909,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    fetchUsers();
+                    fetchUsers().catch(() => {});
                   }}
                   className="text-xs font-bold uppercase tracking-widest text-primary hover:opacity-70"
                 >
@@ -966,7 +966,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
                           <td className="py-4">
                             <select
                               value={u.role}
-                              onChange={(e) => handleRoleChange(u.uid, e.target.value as UserProfile['role'])}
+                              onChange={(e) => handleRoleChange(u.uid, e.target.value as UserProfile['role']).catch(() => {})}
                               disabled={u.uid === userProfile.uid}
                               className="text-xs px-3 py-2 bg-accent/30 border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all disabled:opacity-50"
                             >
@@ -980,7 +980,7 @@ export default function Settings({ settings, userProfile, activeSection }: Setti
                           <td className="py-4 text-right">
                             {u.uid !== userProfile.uid && (
                               <button
-                                onClick={() => handleDeleteUser(u.uid)}
+                                onClick={() => handleDeleteUser(u.uid).catch(() => {})}
                                 className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                                 title="Delete User"
                               >

@@ -335,7 +335,7 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
                       {userProfile?.role === 'admin' && (
                         <button
                           disabled={earnings.total <= 0}
-                          onClick={() => handlePayout(member, earnings.total)}
+                          onClick={() => handlePayout(member, earnings.total).catch(() => {})}
                           className={cn(
                             "w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all",
                             earnings.total > 0 
@@ -389,61 +389,61 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-stone-50/50 border-b border-stone-100">
-                  <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-stone-400">User</th>
-                  <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-stone-400">Email</th>
-                  <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-stone-400">Role</th>
-                  <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-stone-400">Joined</th>
+                  <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-widest text-stone-400">User</th>
+                  <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-widest text-stone-400">Email</th>
+                  <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-widest text-stone-400">Role</th>
+                  <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-widest text-stone-400">Joined</th>
                   {userProfile?.role === 'admin' && (
-                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-stone-400 text-right">Actions</th>
+                    <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-widest text-stone-400 text-right">Actions</th>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {users.map((user) => (
                   <tr key={user.uid} className="hover:bg-stone-50/50 transition-colors group">
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <img src={user.photoURL} className="w-10 h-10 rounded-xl shadow-sm" alt="" />
+                          <img src={user.photoURL} className="w-8 h-8 rounded-xl shadow-sm" alt="" />
                           <div className={cn(
-                            "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white",
+                            "absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-white",
                             isUserOnline(user.lastSeen) ? "bg-emerald-500" : "bg-rose-500"
                           )} title={isUserOnline(user.lastSeen) ? "Online" : "Offline"} />
                         </div>
                         <div>
-                          <div className="font-serif italic text-stone-900">{user.displayName}</div>
+                          <div className="font-serif italic text-stone-900 text-[11px]">{user.displayName}</div>
                           {user.uid === userProfile?.uid && (
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">You</span>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded">You</span>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-5 text-sm text-stone-500 font-mono">{user.email}</td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-3 text-[10px] text-stone-500 font-mono">{user.email}</td>
+                    <td className="px-4 py-3">
                       <div className={cn(
-                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest",
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest",
                         user.role === 'admin' ? "bg-stone-900 text-white" :
                         user.role === 'manager' ? "bg-stone-800 text-white" :
                         user.role === 'staff' ? "bg-amber-100 text-amber-900" :
                         "bg-stone-100 text-stone-500"
                       )}>
-                        {user.role === 'admin' ? <Shield className="w-3 h-3" /> :
-                         user.role === 'manager' ? <Shield className="w-3 h-3 opacity-80" /> :
-                         user.role === 'staff' ? <UserCheck className="w-3 h-3" /> :
-                         <Users className="w-3 h-3" />}
+                        {user.role === 'admin' ? <Shield className="w-2.5 h-2.5" /> :
+                         user.role === 'manager' ? <Shield className="w-2.5 h-2.5 opacity-80" /> :
+                         user.role === 'staff' ? <UserCheck className="w-2.5 h-2.5" /> :
+                         <Users className="w-2.5 h-2.5" />}
                         {user.role}
                       </div>
                     </td>
-                    <td className="px-8 py-5 text-sm text-stone-400">
+                    <td className="px-4 py-3 text-[10px] text-stone-400">
                       {format(parseISO(user.createdAt), 'MMM d, yyyy')}
                     </td>
                     {userProfile?.role === 'admin' && (
-                      <td className="px-8 py-5 text-right">
-                      <div className="flex items-center justify-end gap-2 transition-opacity">
+                      <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5 transition-opacity">
                         <select
                           value={user.role}
-                          onChange={(e) => handleUpdateUserRole(user.uid, e.target.value as any)}
-                          className="text-xs font-bold uppercase tracking-widest bg-stone-100 border-none rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                          onChange={(e) => handleUpdateUserRole(user.uid, e.target.value as any).catch(() => {})}
+                          className="text-[10px] font-bold uppercase tracking-widest bg-stone-100 border-none rounded-lg px-2 py-1 focus:ring-2 focus:ring-stone-900 outline-none transition-all"
                           disabled={user.uid === userProfile.uid}
                         >
                           <option value="user">User</option>
@@ -458,10 +458,10 @@ export default function StaffPage({ settings, userProfile }: StaffProps) {
                               setUserToDelete(user);
                               setIsUserDeleteConfirmOpen(true);
                             }}
-                            className="p-1.5 text-stone-400 hover:text-rose-600 transition-colors"
+                            className="p-1 text-stone-400 hover:text-rose-600 transition-colors"
                             title="Remove User"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
                       </div>

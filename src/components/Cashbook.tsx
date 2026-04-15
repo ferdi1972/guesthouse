@@ -585,13 +585,13 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-stone-50/50">
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">Date</th>
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">Description</th>
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">Category</th>
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">Method</th>
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 text-right">Amount</th>
+                  <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400">Date</th>
+                  <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400">Description</th>
+                  <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400">Category</th>
+                  <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400">Method</th>
+                  <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400 text-right">Amount</th>
                   {userProfile?.role === 'admin' && (
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 text-right">Actions</th>
+                    <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400 text-right">Actions</th>
                   )}
                 </tr>
               </thead>
@@ -603,47 +603,47 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                 ) : (
                   filteredEntries.map((entry) => (
                     <tr key={entry.id} className="hover:bg-stone-50/50 transition-colors group">
-                      <td className="px-6 py-4 text-sm text-stone-500 font-mono">
+                      <td className="px-2 py-2 text-[10px] text-stone-500 font-mono whitespace-nowrap">
                         {format(new Date(entry.date), 'MMM dd, yyyy')}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                      <td className="px-2 py-2">
+                        <div className="flex items-center gap-2">
                           {entry.type === 'Income' ? (
-                            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                              <ArrowUpCircle className="w-4 h-4" />
+                            <div className="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                              <ArrowUpCircle className="w-3 h-3" />
                             </div>
                           ) : entry.type === 'Expense' ? (
-                            <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
-                              <ArrowDownCircle className="w-4 h-4" />
+                            <div className="w-6 h-6 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600 shrink-0">
+                              <ArrowDownCircle className="w-3 h-3" />
                             </div>
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                              <RotateCcw className="w-4 h-4" />
+                            <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
+                              <RotateCcw className="w-3 h-3" />
                             </div>
                           )}
-                          <span className="font-medium text-stone-900">{entry.description}</span>
+                          <span className="text-[11px] font-medium text-stone-900 line-clamp-1">{entry.description}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 bg-stone-100 text-stone-600 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                      <td className="px-2 py-2">
+                        <span className="px-1.5 py-0.5 bg-stone-100 text-stone-600 rounded-md text-[8px] font-bold uppercase tracking-wider whitespace-nowrap">
                           {entry.category}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-xs text-stone-500">
+                      <td className="px-2 py-2">
+                        <span className="text-[10px] text-stone-500 whitespace-nowrap">
                           {entry.paymentMethod || '-'}
                         </span>
                       </td>
                       <td className={cn(
-                        "px-6 py-4 text-right font-mono font-bold",
+                        "px-2 py-2 text-right font-mono font-bold text-[11px] whitespace-nowrap",
                         entry.type === 'Income' ? "text-emerald-600" : 
                         entry.type === 'Expense' ? "text-rose-600" : "text-amber-600"
                       )}>
                         {entry.type === 'Income' ? '+' : '-'}{settings?.currency || '$'} {entry.amount.toLocaleString()}
                       </td>
                       {userProfile?.role === 'admin' && (
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2">
+                        <td className="px-2 py-2 text-right">
+                          <div className="flex justify-end gap-1">
                             <button
                               onClick={() => {
                                 setEditingEntry(entry);
@@ -660,20 +660,20 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                                 });
                                 setIsModalOpen(true);
                               }}
-                              className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-all"
+                              className="p-1 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-all"
                               title="Edit Transaction"
                             >
-                              <Edit2 className="w-4 h-4" />
+                              <Edit2 className="w-3 h-3" />
                             </button>
                             <button
                               onClick={() => {
                                 setEntryToDelete(entry.id);
                                 setIsDeleteConfirmOpen(true);
                               }}
-                              className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                              className="p-1 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                               title="Delete Transaction"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
                         </td>
@@ -697,14 +697,14 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
               <div className="p-8 text-center text-stone-400 italic text-sm">No outstanding balances.</div>
             ) : (
               pendingBookings.map((booking) => (
-                <div key={booking.id} className="p-4 hover:bg-stone-50 transition-colors">
+                <div key={booking.id} className="p-3 hover:bg-stone-50 transition-colors">
                   <div className="flex justify-between items-start mb-1">
-                    <span className="font-medium text-stone-900 text-sm">{guests[booking.guestId]?.name || 'Unknown Guest'}</span>
-                    <span className="font-mono font-bold text-rose-600 text-sm">
+                    <span className="font-medium text-stone-900 text-xs">{guests[booking.guestId]?.name || 'Unknown Guest'}</span>
+                    <span className="font-mono font-bold text-rose-600 text-xs">
                       {settings?.currency || '$'} {(booking.totalAmount - (booking.paidAmount || 0)).toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] text-stone-500 uppercase tracking-widest font-bold">
+                  <div className="flex justify-between items-center text-[9px] text-stone-500 uppercase tracking-widest font-bold">
                     <span>Room {booking.roomId}</span>
                     <span>Paid: {settings?.currency || '$'} {(booking.paidAmount || 0).toLocaleString()}</span>
                   </div>
@@ -936,10 +936,10 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-stone-50/50">
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">Date</th>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">Description</th>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">Category</th>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 text-right">Amount</th>
+                    <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400">Date</th>
+                    <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400">Description</th>
+                    <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400">Category</th>
+                    <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400 text-right">Amount</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
@@ -951,19 +951,19 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                     <>
                       {budgetTransactions.map((entry) => (
                         <tr key={entry.id} className="hover:bg-stone-50/50 transition-colors">
-                          <td className="px-6 py-4 text-sm text-stone-500 font-mono">
+                          <td className="px-2 py-2 text-[10px] text-stone-500 font-mono whitespace-nowrap">
                             {format(new Date(entry.date), 'MMM dd')}
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="font-medium text-stone-900">{entry.description}</span>
+                          <td className="px-2 py-2">
+                            <span className="text-[11px] font-medium text-stone-900 line-clamp-1">{entry.description}</span>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="px-2 py-1 bg-stone-100 text-stone-600 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                          <td className="px-2 py-2">
+                            <span className="px-1.5 py-0.5 bg-stone-100 text-stone-600 rounded-md text-[8px] font-bold uppercase tracking-wider whitespace-nowrap">
                               {entry.category}
                             </span>
                           </td>
                           <td className={cn(
-                            "px-6 py-4 text-right font-mono font-bold",
+                            "px-2 py-2 text-right font-mono font-bold text-[11px] whitespace-nowrap",
                             entry.type === 'Income' ? "text-emerald-600" : 
                             entry.type === 'Expense' ? "text-rose-600" : "text-amber-600"
                           )}>
@@ -972,11 +972,11 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                         </tr>
                       ))}
                       <tr className="bg-stone-50/80 font-bold border-t-2 border-stone-200">
-                        <td colSpan={3} className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-stone-500">
+                        <td colSpan={3} className="px-2 py-2 text-right text-[9px] font-bold uppercase tracking-widest text-stone-500">
                           Monthly Totals
                         </td>
                         <td className={cn(
-                          "px-6 py-4 text-right font-mono",
+                          "px-2 py-2 text-right font-mono text-[11px]",
                           actualNettProfit >= 0 ? "text-emerald-600" : "text-rose-600"
                         )}>
                           {settings?.currency || '$'} {actualNettProfit.toLocaleString()}
@@ -1021,10 +1021,10 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-stone-50/50">
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">Category</th>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 text-right">Projected</th>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 text-right">Actual</th>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 text-right">Variance</th>
+                    <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400">Category</th>
+                    <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400 text-right">Projected</th>
+                    <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400 text-right">Actual</th>
+                    <th className="px-2 py-2 text-[9px] font-bold uppercase tracking-widest text-stone-400 text-right">Variance</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
@@ -1041,17 +1041,17 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                         
                         return (
                           <tr key={budget.id} className="hover:bg-stone-50/50 transition-colors">
-                            <td className="px-6 py-4">
-                              <span className="font-medium text-stone-900">{budget.category}</span>
+                            <td className="px-2 py-2">
+                              <span className="text-[11px] font-medium text-stone-900 line-clamp-1">{budget.category}</span>
                             </td>
-                            <td className="px-6 py-4 text-right font-mono">
+                            <td className="px-2 py-2 text-right font-mono text-[11px]">
                               {settings?.currency || '$'} {budget.amount.toLocaleString()}
                             </td>
-                            <td className="px-6 py-4 text-right font-mono">
+                            <td className="px-2 py-2 text-right font-mono text-[11px]">
                               {settings?.currency || '$'} {actual.toLocaleString()}
                             </td>
                             <td className={cn(
-                              "px-6 py-4 text-right font-mono font-bold",
+                              "px-2 py-2 text-right font-mono font-bold text-[11px]",
                               variance >= 0 ? "text-emerald-600" : "text-rose-600"
                             )}>
                               {variance >= 0 ? '+' : ''}{settings?.currency || '$'} {variance.toLocaleString()}
@@ -1060,17 +1060,17 @@ export default function Cashbook({ settings, userProfile }: CashbookProps) {
                         );
                       })}
                       <tr className="bg-stone-50/80 font-bold border-t-2 border-stone-200">
-                        <td className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-stone-500">
+                        <td className="px-2 py-2 text-right text-[9px] font-bold uppercase tracking-widest text-stone-500">
                           Total Projection
                         </td>
-                        <td className="px-6 py-4 text-right font-mono text-stone-900">
+                        <td className="px-2 py-2 text-right font-mono text-[11px] text-stone-900">
                           {settings?.currency || '$'} {projectedNettProfit.toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 text-right font-mono text-stone-900">
+                        <td className="px-2 py-2 text-right font-mono text-[11px] text-stone-900">
                           {settings?.currency || '$'} {actualNettProfit.toLocaleString()}
                         </td>
                         <td className={cn(
-                          "px-6 py-4 text-right font-mono",
+                          "px-2 py-2 text-right font-mono text-[11px]",
                           (actualNettProfit - projectedNettProfit) >= 0 ? "text-emerald-600" : "text-rose-600"
                         )}>
                           {(actualNettProfit - projectedNettProfit) >= 0 ? '+' : ''}{settings?.currency || '$'} {(actualNettProfit - projectedNettProfit).toLocaleString()}
