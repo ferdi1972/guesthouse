@@ -336,8 +336,15 @@ export function onSnapshot(
         onNext(snap);
       }
     } catch (err) {
-      if (onError) onError(err);
-      else console.error('Snapshot listener error:', err);
+      if (onError) {
+        try {
+          onError(err);
+        } catch (e) {
+          console.error('onError callback error:', e);
+        }
+      } else {
+        console.error('Snapshot listener error:', err);
+      }
     }
   };
 
