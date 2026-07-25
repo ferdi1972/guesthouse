@@ -16,13 +16,11 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { db, auth, collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from '../firebase';
 import { Receipt, Settings, UserProfile } from '../types';
 import { format, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
-import { auth } from '../firebase';
 
 interface ReceiptsListProps {
   settings: Settings | null;

@@ -1,6 +1,5 @@
 import * as XLSX from 'xlsx';
-import { db } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { db, collection, getDocs } from '../firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 export const exportToExcel = async () => {

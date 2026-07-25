@@ -18,8 +18,7 @@ import {
   Area,
   Cell
 } from 'recharts';
-import { auth, db } from '../firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { auth, db, collection, onSnapshot } from '../firebase';
 import { CashbookEntry, Settings, Budget } from '../types';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 import { 

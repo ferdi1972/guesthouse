@@ -31,9 +31,19 @@ import {
   Contact,
   Bell
 } from 'lucide-react';
-import { auth, db } from './firebase';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, collection, updateDoc } from 'firebase/firestore';
+import { 
+  auth, 
+  db, 
+  onAuthStateChanged, 
+  signOut, 
+  LocalUser as User, 
+  doc, 
+  onSnapshot, 
+  setDoc, 
+  getDoc, 
+  collection, 
+  updateDoc 
+} from './firebase';
 import { cn } from './lib/utils';
 import { handleFirestoreError, OperationType } from './lib/firestore-utils';
 

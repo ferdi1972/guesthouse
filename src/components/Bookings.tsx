@@ -25,12 +25,10 @@ import {
   Search,
   Filter
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, orderBy, getDocs, where } from 'firebase/firestore';
+import { db, auth, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, orderBy, getDocs, where } from '../firebase';
 import { Booking, Guest, Room, BookingStatus, Settings, RateType, Receipt, UserProfile } from '../types';
 import { format, differenceInDays, isBefore, startOfDay, parseISO, addDays } from 'date-fns';
 import { cn } from '../lib/utils';
-import { auth } from '../firebase';
 import ReceiptsList from './ReceiptsList';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 

@@ -1,19 +1,28 @@
-import { db } from '../firebase';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import { db, collection, getDocs, doc, setDoc, getLocalStore } from '../firebase';
 import { Settings as SettingsType } from '../types';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 export const createBackup = async (settings: SettingsType | null) => {
   try {
-    const collections = ['rooms', 'guests', 'bookings', 'cashbook', 'staff', 'receipts', 'settings'];
+    const store = getLocalStore();
     const backupData: any = {};
 
-    for (const colName of collections) {
-      const querySnapshot = await getDocs(collection(db, colName));
-      backupData[colName] = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+    // Backup all collections in local store
+    const allCollections = Array.from(new Set([
+      'rooms', 'guests', 'bookings', 'cashbook', 'staff', 'receipts', 'settings',
+      'users', 'stickyNotes', 'diary', 'passwordSafe', 'inventory', 'electricity',
+      'budgets', 'contacts', 'reminders', ...Object.keys(store)
+    ]));
+
+    for (const colName of allCollections) {
+      if (store[colName]) {
+        backupData[colName] = Object.entries(store[colName]).map(([id, data]) => ({
+          id,
+          ...data
+        }));
+      } else {
+        backupData[colName] = [];
+      }
     }
 
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
@@ -28,7 +37,7 @@ export const createBackup = async (settings: SettingsType | null) => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    // Update last backup date in Firestore
+    // Update last backup date in local store
     if (settings) {
       const updatedSettings = { 
         ...settings, 
@@ -75,7 +84,7 @@ export const isBackupDue = (settings: SettingsType | null): boolean => {
 
   switch (settings.backupFrequency) {
     case 'daily':
-      return diffInDays >= 0.8 && isPastTimeToday; // 0.8 to handle slight variations, but mainly isPastTimeToday
+      return diffInDays >= 0.8 && isPastTimeToday;
     case 'weekly':
       return diffInDays >= 6.8 && isPastTimeToday;
     case 'monthly':

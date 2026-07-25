@@ -24,8 +24,7 @@ import {
   Clock,
   Info
 } from 'lucide-react';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, collection, onSnapshot, query, where } from '../firebase';
 import { Booking, Room, Guest } from '../types';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';

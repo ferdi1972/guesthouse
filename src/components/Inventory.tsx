@@ -15,8 +15,7 @@ import {
   Plus,
   Minus
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from '../firebase';
 import { Room, RoomInventoryItem, Settings, UserProfile } from '../types';
 import { format, parseISO } from 'date-fns';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';

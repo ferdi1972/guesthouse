@@ -11,17 +11,17 @@ import {
   ChevronRight,
   Filter
 } from 'lucide-react';
-import { db, auth } from '../firebase';
 import { 
+  db, 
+  auth, 
   collection, 
   onSnapshot, 
   addDoc, 
   deleteDoc, 
   doc, 
   query, 
-  orderBy, 
-  Timestamp 
-} from 'firebase/firestore';
+  orderBy 
+} from '../firebase';
 import { DiaryEntry, Settings, UserProfile } from '../types';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { format } from 'date-fns';

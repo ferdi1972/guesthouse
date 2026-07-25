@@ -27,10 +27,6 @@ export interface Room {
   status: RoomStatus;
   description?: string;
   maintenanceNotes?: string;
-  bookingComIcalUrl?: string;
-  lekkeSlaapIcalUrl?: string;
-  externalIcalUrl?: string;
-  lastSyncAt?: string;
 }
 
 export interface RoomInventoryItem {

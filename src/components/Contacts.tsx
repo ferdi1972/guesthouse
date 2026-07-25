@@ -17,8 +17,9 @@ import {
   ExternalLink,
   MessageCircle
 } from 'lucide-react';
-import { db, auth } from '../firebase';
 import { 
+  db, 
+  auth, 
   collection, 
   addDoc, 
   updateDoc, 
@@ -28,7 +29,7 @@ import {
   query, 
   orderBy,
   serverTimestamp 
-} from 'firebase/firestore';
+} from '../firebase';
 import { Contact } from '../types';
 import { format } from 'date-fns';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';

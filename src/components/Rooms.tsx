@@ -16,12 +16,9 @@ import {
   Package,
   Plus as PlusIcon,
   Minus,
-  Trash,
-  Zap,
-  Link
+  Trash
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, where } from 'firebase/firestore';
+import { db, auth, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, where } from '../firebase';
 import { Room, RoomStatus, Settings, Booking, Guest, UserProfile, RoomInventoryItem } from '../types';
 import { 
   format, 
@@ -38,7 +35,6 @@ import {
   parseISO
 } from 'date-fns';
 import { cn } from '../lib/utils';
-import { auth } from '../firebase';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 
 interface RoomsProps {
@@ -57,7 +53,6 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
-  const [syncingRoomId, setSyncingRoomId] = useState<string | null>(null);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [calendarRoom, setCalendarRoom] = useState<Room | null>(null);
   const [inventoryRoom, setInventoryRoom] = useState<Room | null>(null);
@@ -76,10 +71,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
     hourlyRate: '' as string | number,
     status: 'Available' as RoomStatus,
     description: '',
-    maintenanceNotes: '',
-    bookingComIcalUrl: '',
-    lekkeSlaapIcalUrl: '',
-    externalIcalUrl: ''
+    maintenanceNotes: ''
   });
 
   useEffect(() => {
@@ -196,10 +188,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
         hourlyRate: '', 
         status: 'Available', 
         description: '', 
-        maintenanceNotes: '',
-        bookingComIcalUrl: '',
-        lekkeSlaapIcalUrl: '',
-        externalIcalUrl: ''
+        maintenanceNotes: ''
       });
     } catch (error) {
       handleFirestoreError(error, editingRoom ? OperationType.UPDATE : OperationType.CREATE, path);
@@ -365,10 +354,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                   hourlyRate: '', 
                   status: 'Available', 
                   description: '', 
-                  maintenanceNotes: '',
-                  bookingComIcalUrl: '',
-                  lekkeSlaapIcalUrl: '',
-                  externalIcalUrl: ''
+                  maintenanceNotes: ''
                 });
                 setIsModalOpen(true);
               }}
@@ -469,60 +455,6 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
 
                 <div className="px-4 py-3 bg-stone-50/50 border-t border-stone-100 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-2">
-                      {userProfile?.role === 'admin' && (
-                        <button
-                          disabled={syncingRoomId === room.id}
-                          onClick={() => {
-                            (async () => {
-                              try {
-                                setSyncingRoomId(room.id);
-                                const response = await fetch(`/api/rooms/${room.id}/sync`, { method: 'POST' });
-                                const data = await response.json();
-                                if (data.success) {
-                                  let message = `Sync successful! Imported ${data.newBookingsCount} new bookings.`;
-                                  if (data.errors && data.errors.length > 0) {
-                                    message += `\n\nSome sources had issues:\n- ${data.errors.join('\n- ')}`;
-                                  }
-                                  alert(message);
-                                } else {
-                                  alert(`Sync failed: ${data.message || 'Unknown error'}`);
-                                }
-                              } catch (error) {
-                                console.error('Sync error:', error);
-                                alert('Failed to sync. Please check URLs and server logs.');
-                              } finally {
-                                setSyncingRoomId(null);
-                              }
-                            })().catch(() => {});
-                          }}
-                          className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors p-1.5 rounded-lg ${
-                            syncingRoomId === room.id 
-                              ? 'text-stone-400 bg-stone-100 cursor-not-allowed' 
-                              : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
-                          }`}
-                        >
-                        <Zap className={`w-3 h-3 ${syncingRoomId === room.id ? 'animate-pulse' : ''}`} /> 
-                        {syncingRoomId === room.id ? 'Syncing...' : 'Sync'}
-                      </button>
-                    )}
-                    {room.lastSyncAt && (
-                      <span className="text-[9px] text-stone-400 self-center">
-                        Last sync: {format(new Date(room.lastSyncAt), 'HH:mm')}
-                      </span>
-                    )}
-                    {userProfile?.role === 'admin' && (
-                      <button
-                        onClick={() => {
-                          const exportUrl = `${window.location.origin}/api/rooms/${room.id}/export.ics`;
-                          navigator.clipboard.writeText(exportUrl);
-                          alert('Export link copied to clipboard!');
-                        }}
-                        className="text-[10px] font-bold uppercase tracking-wider text-stone-600 hover:text-stone-700 flex items-center gap-1 transition-colors p-1.5 hover:bg-stone-100 rounded-lg"
-                        title="Copy iCal Export Link"
-                      >
-                        <Link className="w-3 h-3" /> Export Link
-                      </button>
-                    )}
                     {userProfile?.role === 'admin' && (
                       <button
                         onClick={() => {
@@ -536,10 +468,7 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                             hourlyRate: room.hourlyRate,
                             status: room.status,
                             description: room.description || '',
-                            maintenanceNotes: room.maintenanceNotes || '',
-                            bookingComIcalUrl: room.bookingComIcalUrl || '',
-                            lekkeSlaapIcalUrl: room.lekkeSlaapIcalUrl || '',
-                            externalIcalUrl: room.externalIcalUrl || ''
+                            maintenanceNotes: room.maintenanceNotes || ''
                           });
                           setIsModalOpen(true);
                         }}
@@ -911,53 +840,6 @@ export default function Rooms({ settings, userProfile }: RoomsProps) {
                 </div>
               )}
 
-              <div className="space-y-4 border-t border-stone-100 pt-6">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-stone-900">Channel Manager (iCal Sync)</h4>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Booking.com iCal URL</label>
-                    <input
-                      type="url"
-                      value={formData.bookingComIcalUrl}
-                      onChange={(e) => setFormData({ ...formData, bookingComIcalUrl: e.target.value })}
-                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all text-xs"
-                      placeholder="https://admin.booking.com/hotel/hoteladmin/ical.html?..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">LekkeSlaap iCal URL</label>
-                    <input
-                      type="url"
-                      value={formData.lekkeSlaapIcalUrl}
-                      onChange={(e) => setFormData({ ...formData, lekkeSlaapIcalUrl: e.target.value })}
-                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all text-xs"
-                      placeholder="https://www.lekkeslaap.co.za/ical/..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">External iCal URL (e.g. Stay@Edison)</label>
-                    <input
-                      type="url"
-                      value={formData.externalIcalUrl}
-                      onChange={(e) => setFormData({ ...formData, externalIcalUrl: e.target.value })}
-                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-900 outline-none transition-all text-xs"
-                      placeholder="https://example.com/calendar.ics"
-                    />
-                    <p className="text-[9px] text-stone-400 ml-1">
-                      Use the direct .ics export link from your booking system.
-                    </p>
-                  </div>
-                  {editingRoom && (
-                    <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">Export URL</p>
-                      <p className="text-[10px] font-mono break-all text-blue-800 select-all">
-                        {window.location.origin}/api/rooms/{editingRoom.id}/export.ics
-                      </p>
-                      <p className="text-[9px] text-blue-500 mt-1 italic">Copy this URL to Booking.com/LekkeSlaap export settings.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
               <div className="pt-4 flex gap-3">
                 <button
                   type="button"

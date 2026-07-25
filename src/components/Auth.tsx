@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { auth, db } from '../firebase';
 import { 
+  auth, 
+  db,
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   updateProfile,
   sendPasswordResetEmail,
   signInWithPopup,
-  GoogleAuthProvider
-} from 'firebase/auth';
-import { doc, setDoc, getDocs, collection, query, limit, getDoc } from 'firebase/firestore';
+  GoogleAuthProvider,
+  doc, 
+  setDoc, 
+  getDocs, 
+  collection, 
+  query, 
+  limit, 
+  getDoc 
+} from '../firebase';
 import { Hotel, Mail, Lock, User, ArrowRight, Loader2, KeyRound, Chrome, ArrowLeft } from 'lucide-react';
 import { UserProfile } from '../types';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';

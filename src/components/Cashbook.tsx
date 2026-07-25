@@ -15,12 +15,10 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, orderBy, where } from 'firebase/firestore';
+import { db, auth, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, orderBy, where } from '../firebase';
 import { CashbookEntry, TransactionType, Settings, Booking, Guest, UserProfile, Budget } from '../types';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';
-import { auth } from '../firebase';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { exportDataToExcel, exportMultipleSheetsToExcel } from '../services/excelService';
 

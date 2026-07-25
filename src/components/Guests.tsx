@@ -14,12 +14,10 @@ import {
   FileText,
   X
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db, auth, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp } from '../firebase';
 import { Guest, UserProfile } from '../types';
 import { format } from 'date-fns';
 import { cn } from '../lib/utils';
-import { auth } from '../firebase';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 
 interface GuestsProps {

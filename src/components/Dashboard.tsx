@@ -13,8 +13,7 @@ import {
   Bell,
   AlertCircle
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, query, where, limit, orderBy } from 'firebase/firestore';
+import { db, collection, onSnapshot, query, where, limit, orderBy } from '../firebase';
 import { Guest, Room, Booking, CashbookEntry, Settings, Reminder } from '../types';
 import { format, isToday, isAfter, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';

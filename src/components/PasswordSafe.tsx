@@ -12,8 +12,9 @@ import {
   Shield,
   Key
 } from 'lucide-react';
-import { db, auth } from '../firebase';
 import { 
+  db, 
+  auth, 
   collection, 
   onSnapshot, 
   addDoc, 
@@ -22,7 +23,7 @@ import {
   query, 
   orderBy,
   updateDoc
-} from 'firebase/firestore';
+} from '../firebase';
 import { PasswordEntry, Settings, UserProfile } from '../types';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 import { cn } from '../lib/utils';

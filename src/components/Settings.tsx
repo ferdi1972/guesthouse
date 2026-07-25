@@ -22,8 +22,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { db, auth } from '../firebase';
-import { doc, setDoc, collection, getDocs, writeBatch, deleteDoc } from 'firebase/firestore';
+import { db, auth, doc, setDoc, collection, getDocs, writeBatch, deleteDoc } from '../firebase';
 import { Settings as SettingsType, AppTheme, BackupFrequency, UserProfile } from '../types';
 import { createBackup } from '../services/backupService';
 import { exportToExcel } from '../services/excelService';

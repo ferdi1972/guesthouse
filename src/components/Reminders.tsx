@@ -13,8 +13,9 @@ import {
   MoreVertical,
   Check
 } from 'lucide-react';
-import { db, auth } from '../firebase';
 import { 
+  db, 
+  auth, 
   collection, 
   onSnapshot, 
   addDoc, 
@@ -24,7 +25,7 @@ import {
   orderBy, 
   updateDoc,
   where
-} from 'firebase/firestore';
+} from '../firebase';
 import { Reminder, Settings, UserProfile } from '../types';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 import { format, isAfter, isBefore, startOfDay, parseISO } from 'date-fns';

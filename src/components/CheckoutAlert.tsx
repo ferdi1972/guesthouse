@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Bell, X, Clock, User, Bed } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { db, collection, onSnapshot, query, where } from '../firebase';
 import { Booking, Guest, Room } from '../types';
 import { format, parseISO, addMinutes, isSameMinute } from 'date-fns';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';

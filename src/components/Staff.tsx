@@ -13,12 +13,10 @@ import {
   AlertCircle,
   Camera
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, writeBatch, getDocs } from 'firebase/firestore';
+import { db, auth, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, writeBatch, getDocs } from '../firebase';
 import { Staff, CashbookEntry, Settings, UserProfile } from '../types';
 import { format, parseISO, isAfter } from 'date-fns';
 import { cn } from '../lib/utils';
-import { auth } from '../firebase';
 import { Shield, UserCheck, UserCog } from 'lucide-react';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
 

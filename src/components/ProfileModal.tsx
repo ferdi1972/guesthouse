@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, Camera, User, Mail, Shield, Save, Loader2 } from 'lucide-react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, doc, updateDoc } from '../firebase';
 import { UserProfile, AppTheme } from '../types';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';

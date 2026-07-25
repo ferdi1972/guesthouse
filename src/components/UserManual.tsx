@@ -55,7 +55,7 @@ export default function UserManual() {
         {
           title: "Bookings",
           icon: CalendarDays,
-          description: "The core of the system. Create new bookings, manage check-ins/outs, and track payments. Supports both internal and external (iCal) booking sources like Booking.com."
+          description: "The core of the system. Create new bookings, manage check-ins/outs, and track payments."
         },
         {
           title: "Receipts",

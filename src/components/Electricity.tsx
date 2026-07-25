@@ -14,8 +14,7 @@ import {
   Filter,
   BarChart3
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, query, orderBy, where, getDocs } from 'firebase/firestore';
+import { db, collection, onSnapshot, addDoc, deleteDoc, doc, query, orderBy, where, getDocs } from '../firebase';
 import { ElectricityReading, CashbookEntry, Settings } from '../types';
 import { format, startOfDay, endOfDay, subDays, isWithinInterval, parseISO } from 'date-fns';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
