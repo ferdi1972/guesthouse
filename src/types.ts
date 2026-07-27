@@ -225,3 +225,12 @@ export interface Reminder {
   authorName?: string;
   createdAt: string;
 }
+
+export interface MessageTemplate {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  isDefault?: boolean;
+  createdAt?: string;
+}

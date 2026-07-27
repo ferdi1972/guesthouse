@@ -73,6 +73,7 @@ import PasswordSafe from './components/PasswordSafe';
 import BackupChecker from './components/BackupChecker';
 import CheckoutAlert from './components/CheckoutAlert';
 import ProfileModal from './components/ProfileModal';
+import Messages from './components/Messages';
 import { Settings as SettingsType, UserProfile, Staff as StaffType } from './types';
 
 export default function App() {
@@ -368,7 +369,7 @@ export default function App() {
         { id: 'electricity', label: 'Electricity', icon: Zap },
         { id: 'inventory', label: 'Inventory', icon: Package },
         { id: 'calculator', label: 'Calculator', icon: Calculator, onClick: () => setIsCalculatorOpen(true) },
-        { id: 'message-staff', label: 'Message', icon: MessageCircle, onClick: () => setIsStaffModalOpen(true) },
+        { id: 'messages', label: 'Messages', icon: MessageCircle },
       ]
     },
     ...(userProfile?.role === 'admin' || userProfile?.role === 'manager' ? [{
@@ -567,7 +568,7 @@ export default function App() {
           {activeTab === 'schedule' && <Schedule />}
           {activeTab === 'electricity' && <Electricity settings={settings} />}
           {activeTab === 'inventory' && <Inventory settings={settings} userProfile={userProfile} />}
-          {activeTab === 'message-staff' && <div className="text-center py-20 text-stone-400 italic">Please use the sidebar button to message.</div>}
+          {activeTab === 'messages' && <Messages settings={settings} userProfile={userProfile} />}
           
           {activeTab === 'support' && <Support settings={settings} userProfile={userProfile} />}
           {activeTab === 'user-manual' && <UserManual />}

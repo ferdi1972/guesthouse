@@ -31,7 +31,10 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   private handlePromiseRejection = (event: PromiseRejectionEvent) => {
-    console.error('Unhandled promise rejection caught by ErrorBoundary:', event.reason);
+    console.warn('Unhandled promise rejection:', event.reason);
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault();
+    }
   };
 
   private handleGlobalError = (event: ErrorEvent) => {
