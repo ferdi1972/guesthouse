@@ -11,18 +11,13 @@ import {
   Check, 
   Sparkles, 
   Phone, 
-  Info, 
   Bookmark, 
-  FileText,
   X,
-  ExternalLink,
   MessageCircle,
-  Building,
-  Calendar,
-  Bed,
-  CreditCard
+  ChevronRight,
+  ArrowRight
 } from 'lucide-react';
-import { db, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, query, orderBy } from '../firebase';
+import { db, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from '../firebase';
 import { Settings, Guest, Booking, Room, MessageTemplate, UserProfile, Staff } from '../types';
 import { format, parseISO } from 'date-fns';
 import { handleFirestoreError, OperationType, cleanData } from '../lib/firestore-utils';
@@ -103,6 +98,9 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<MessageTemplate | null>(null);
+
+  // Mobile active tab view ('templates' or 'preview')
+  const [mobileTab, setMobileTab] = useState<'templates' | 'preview'>('templates');
 
   // Selected Guest or Custom Variables
   const [selectedGuestId, setSelectedGuestId] = useState<string>('');
@@ -275,6 +273,15 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  // Select template and auto-switch to preview on mobile
+  const handleSelectTemplate = (template: MessageTemplate) => {
+    setSelectedTemplate(template);
+    // On small screens, automatically switch to preview tab for seamless UX
+    if (window.innerWidth < 1024) {
+      setMobileTab('preview');
+    }
+  };
+
   // Open modal to create or edit template
   const handleOpenModal = (template?: MessageTemplate) => {
     if (template) {
@@ -346,59 +353,95 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
   });
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto px-2 sm:px-4">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-stone-900 text-stone-100 p-8 rounded-3xl shadow-xl relative overflow-hidden">
-        <div className="relative z-10 space-y-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-stone-900 text-stone-100 p-5 sm:p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl relative overflow-hidden">
+        <div className="relative z-10 space-y-1.5 sm:space-y-2">
           <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-widest">
             <MessageSquare className="w-4 h-4" /> Operations Messaging Hub
           </div>
-          <h1 className="text-3xl md:text-4xl font-serif italic text-white">
-            Client WhatsApp Templates
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif italic text-white">
+            Client WhatsApp Responses
           </h1>
-          <p className="text-stone-300 text-sm max-w-2xl">
-            Select pre-saved responses, auto-populate client details, and send directly via WhatsApp or copy to clipboard instantly.
+          <p className="text-stone-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
+            Select pre-saved templates, auto-fill guest details, and send directly to WhatsApp or copy to clipboard.
           </p>
         </div>
 
         <button
           onClick={() => handleOpenModal()}
-          className="relative z-10 inline-flex items-center gap-2 bg-emerald-500 text-stone-950 font-bold px-6 py-3.5 rounded-2xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 shrink-0 self-start md:self-auto"
+          className="relative z-10 inline-flex items-center justify-center gap-2 bg-emerald-500 text-stone-950 font-bold px-5 py-3 rounded-xl sm:rounded-2xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 shrink-0 text-xs sm:text-sm w-full sm:w-auto"
         >
-          <Plus className="w-5 h-5" /> Create Template
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" /> Create Custom Template
         </button>
 
         {/* Decorative background glow */}
         <div className="absolute -right-10 -bottom-10 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* Mobile & Tablet Tab Navigation Control (Visible on < lg) */}
+      <div className="flex lg:hidden bg-muted p-1.5 rounded-2xl border border-border">
+        <button
+          type="button"
+          onClick={() => setMobileTab('templates')}
+          className={cn(
+            "flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all",
+            mobileTab === 'templates'
+              ? "bg-card text-foreground shadow-sm border border-border"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Bookmark className="w-4 h-4 text-emerald-500" /> 1. Templates ({templates.length})
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobileTab('preview')}
+          className={cn(
+            "flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all relative",
+            mobileTab === 'preview'
+              ? "bg-card text-foreground shadow-sm border border-border"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <MessageCircle className="w-4 h-4 text-emerald-500" /> 2. Preview & Send
+          {selectedTemplate && (
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+          )}
+        </button>
+      </div>
+
+      {/* Main Responsive Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         
-        {/* Left Column: Template Selector & Categories (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-5">
-            {/* Search and Category Filter */}
-            <div className="space-y-4">
+        {/* Left Column: Template Selector & Categories (5 cols on Desktop, Tab 1 on Mobile) */}
+        <div className={cn(
+          "lg:col-span-5 space-y-6",
+          mobileTab !== 'templates' && "hidden lg:block"
+        )}>
+          <div className="bg-card border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 sm:space-y-5">
+            
+            {/* Search & Category Filter */}
+            <div className="space-y-3 sm:space-y-4">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search templates..."
+                  placeholder="Search pre-saved responses..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
               </div>
 
-              {/* Category Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+              {/* Category Pills (Touch friendly scrollbar) */}
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 custom-scrollbar">
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
                     className={cn(
-                      "px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border",
+                      "px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold whitespace-nowrap transition-all border shrink-0",
                       selectedCategory === cat
                         ? "bg-stone-900 text-white border-stone-900 dark:bg-white dark:text-stone-900 dark:border-white shadow-sm"
                         : "bg-muted/40 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -410,11 +453,11 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
               </div>
             </div>
 
-            {/* Template List */}
-            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+            {/* Template Cards List */}
+            <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1 custom-scrollbar">
               {filteredTemplates.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground text-sm italic">
-                  No templates match your filter.
+                <div className="text-center py-12 text-muted-foreground text-xs sm:text-sm italic">
+                  No templates match your search or category filter.
                 </div>
               ) : (
                 filteredTemplates.map((template) => {
@@ -422,51 +465,60 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
                   return (
                     <div
                       key={template.id}
-                      onClick={() => setSelectedTemplate(template)}
+                      onClick={() => handleSelectTemplate(template)}
                       className={cn(
-                        "p-4 rounded-2xl border transition-all cursor-pointer relative group",
+                        "p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer relative group",
                         isSelected
-                          ? "bg-emerald-500/10 border-emerald-500/50 shadow-md"
+                          ? "bg-emerald-500/10 border-emerald-500/60 shadow-md ring-1 ring-emerald-500/20"
                           : "bg-background border-border hover:border-stone-400 dark:hover:border-stone-600"
                       )}
                     >
                       <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           <Bookmark className={cn("w-4 h-4 shrink-0", isSelected ? "text-emerald-500" : "text-muted-foreground")} />
-                          <h3 className="font-bold text-sm text-foreground">{template.title}</h3>
+                          <h3 className="font-bold text-xs sm:text-sm text-foreground truncate">{template.title}</h3>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border shrink-0">
                           {template.category}
                         </span>
                       </div>
 
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed font-sans">
                         {template.content}
                       </p>
 
-                      {/* Management Controls */}
-                      <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between opacity-80 group-hover:opacity-100">
+                      {/* Card Footer Controls */}
+                      <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between">
                         <span className="text-[10px] text-muted-foreground italic">
                           {template.isDefault ? 'Default Response' : 'Custom Response'}
                         </span>
 
-                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => handleOpenModal(template)}
-                            className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-all"
-                            title="Edit Response"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
-                          {!template.isDefault && (
+                        <div className="flex items-center gap-1.5">
+                          {/* Mobile Action Prompt */}
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 lg:hidden">
+                            Select <ChevronRight className="w-3 h-3" />
+                          </span>
+
+                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                             <button
-                              onClick={() => handleDeleteTemplate(template.id, template.isDefault)}
-                              className="p-1.5 text-rose-500 hover:text-rose-600 rounded-lg hover:bg-rose-500/10 transition-all"
-                              title="Delete Response"
+                              type="button"
+                              onClick={() => handleOpenModal(template)}
+                              className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-all"
+                              title="Edit Response"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Edit className="w-3.5 h-3.5" />
                             </button>
-                          )}
+                            {!template.isDefault && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteTemplate(template.id, template.isDefault)}
+                                className="p-1.5 text-rose-500 hover:text-rose-600 rounded-lg hover:bg-rose-500/10 transition-all"
+                                title="Delete Response"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -476,17 +528,17 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
             </div>
           </div>
 
-          {/* Quick Staff Messaging Access */}
-          <div className="bg-stone-50 dark:bg-stone-900/40 border border-border rounded-3xl p-6 space-y-4">
+          {/* Staff Quick Contacts */}
+          <div className="bg-stone-50 dark:bg-stone-900/40 border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-serif italic text-lg text-foreground flex items-center gap-2">
+              <h3 className="font-serif italic text-base sm:text-lg text-foreground flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-500" /> Staff Quick Contacts
               </h3>
               <span className="text-xs text-muted-foreground">{staff.length} staff</span>
             </div>
 
             {staff.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No staff contacts available.</p>
+              <p className="text-xs text-muted-foreground italic">No staff contacts registered.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {staff.map((member) => (
@@ -503,7 +555,7 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
                         className="p-2 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white rounded-lg transition-all"
                         title={`Send WhatsApp to ${member.name}`}
                       >
-                        <MessageCircle className="w-3.5 h-3.5" />
+                        <MessageCircle className="w-4 h-4" />
                       </a>
                     ) : (
                       <span className="text-[10px] text-muted-foreground italic">No phone</span>
@@ -515,17 +567,20 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
           </div>
         </div>
 
-        {/* Right Column: Dynamic Data Injection & Message Preview (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="bg-card border border-border rounded-3xl p-6 lg:p-8 shadow-sm space-y-6">
+        {/* Right Column: Guest Picker & WhatsApp Preview (7 cols on Desktop, Tab 2 on Mobile) */}
+        <div className={cn(
+          "lg:col-span-7 space-y-6",
+          mobileTab !== 'preview' && "hidden lg:block"
+        )}>
+          <div className="bg-card border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-sm space-y-5 sm:space-y-6">
             
             {/* Step 1: Select Guest or Booking */}
-            <div className="space-y-4 pb-6 border-b border-border">
+            <div className="space-y-4 pb-5 sm:pb-6 border-b border-border">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Users className="w-4 h-4 text-emerald-500" /> 1. Select Client / Booking (Optional)
+                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Users className="w-4 h-4 text-emerald-500" /> 1. Select Client / Booking
                 </h3>
-                {(selectedGuestId || manualPhone) && (
+                {(selectedGuestId || manualPhone || manualGuestName) && (
                   <button
                     onClick={() => {
                       setSelectedGuestId('');
@@ -537,25 +592,26 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
                       setManualCheckOut('');
                       setManualTotalAmount('');
                     }}
-                    className="text-xs text-rose-500 hover:underline"
+                    className="text-xs text-rose-500 hover:underline font-medium"
                   >
                     Clear Fields
                   </button>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Guest & Booking Selection Dropdowns */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Guest Picker */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
                     Select Guest
                   </label>
                   <select
                     value={selectedGuestId}
                     onChange={(e) => handleSelectGuest(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    className="w-full px-3 py-2.5 bg-muted/40 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                   >
-                    <option value="">-- Choose Guest --</option>
+                    <option value="">-- Choose Registered Guest --</option>
                     {guests.map((g) => (
                       <option key={g.id} value={g.id}>
                         {g.name} {g.phone ? `(${g.phone})` : ''}
@@ -566,15 +622,15 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
 
                 {/* Booking Picker */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
                     Select Booking
                   </label>
                   <select
                     value={selectedBookingId}
                     onChange={(e) => handleSelectBooking(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    className="w-full px-3 py-2.5 bg-muted/40 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                   >
-                    <option value="">-- Choose Booking --</option>
+                    <option value="">-- Choose Active Booking --</option>
                     {bookings.map((b) => {
                       const guest = guests.find(g => g.id === b.guestId);
                       const room = rooms.find(r => r.id === b.roomId);
@@ -588,120 +644,144 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
                 </div>
               </div>
 
-              {/* Dynamic Variables Override Fields */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Client Phone
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. +27821234567"
-                    value={manualPhone}
-                    onChange={(e) => setManualPhone(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-muted/30 border border-border rounded-lg text-xs"
-                  />
-                </div>
+              {/* Dynamic Variables Inputs Grid */}
+              <div className="space-y-2 pt-1">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Custom Data Inputs (Auto-filled or edit manually):
+                </span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-muted-foreground mb-0.5">
+                      Client WhatsApp Phone
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. +27821234567"
+                      value={manualPhone}
+                      onChange={(e) => setManualPhone(e.target.value)}
+                      className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Guest Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Guest name"
-                    value={manualGuestName}
-                    onChange={(e) => setManualGuestName(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-muted/30 border border-border rounded-lg text-xs"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-muted-foreground mb-0.5">
+                      Guest Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Guest name"
+                      value={manualGuestName}
+                      onChange={(e) => setManualGuestName(e.target.value)}
+                      className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Room Number
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Room 101"
-                    value={manualRoomNumber}
-                    onChange={(e) => setManualRoomNumber(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-muted/30 border border-border rounded-lg text-xs"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-muted-foreground mb-0.5">
+                      Room Number
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Room 101"
+                      value={manualRoomNumber}
+                      onChange={(e) => setManualRoomNumber(e.target.value)}
+                      className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Check-in Date
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="DD MMM YYYY"
-                    value={manualCheckIn}
-                    onChange={(e) => setManualCheckIn(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-muted/30 border border-border rounded-lg text-xs"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-muted-foreground mb-0.5">
+                      Check-in Date
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="DD MMM YYYY"
+                      value={manualCheckIn}
+                      onChange={(e) => setManualCheckIn(e.target.value)}
+                      className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Check-out Date
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="DD MMM YYYY"
-                    value={manualCheckOut}
-                    onChange={(e) => setManualCheckOut(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-muted/30 border border-border rounded-lg text-xs"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-muted-foreground mb-0.5">
+                      Check-out Date
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="DD MMM YYYY"
+                      value={manualCheckOut}
+                      onChange={(e) => setManualCheckOut(e.target.value)}
+                      className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Total Amount ({settings?.currency || 'R'})
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="0.00"
-                    value={manualTotalAmount}
-                    onChange={(e) => setManualTotalAmount(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-muted/30 border border-border rounded-lg text-xs"
-                  />
+                  <div>
+                    <label className="block text-[10px] font-semibold text-muted-foreground mb-0.5">
+                      Total Amount ({settings?.currency || 'R'})
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="0.00"
+                      value={manualTotalAmount}
+                      onChange={(e) => setManualTotalAmount(e.target.value)}
+                      className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Step 2: Formatted Live Preview & Sending Actions */}
+            {/* Step 2: Formatted WhatsApp Live Preview & Actions */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-500" /> 2. Processed WhatsApp Message Preview
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-500" /> 2. WhatsApp Message Preview
                 </h3>
                 {selectedTemplate && (
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+                  <span className="text-[11px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full truncate max-w-[180px]">
                     {selectedTemplate.title}
                   </span>
                 )}
               </div>
 
-              {/* Message Box Styled like WhatsApp bubble */}
-              <div className="relative bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-500/20 rounded-2xl p-5 shadow-inner space-y-4">
+              {/* WhatsApp Bubble Container */}
+              <div className="relative bg-emerald-950/5 dark:bg-emerald-950/30 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 shadow-inner space-y-4">
+                
+                {/* Header status strip */}
+                <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-semibold text-foreground">
+                      {manualGuestName ? `To: ${manualGuestName}` : 'To: Valued Client'}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground font-mono">
+                    {manualPhone || 'No phone entered'}
+                  </span>
+                </div>
+
+                {/* Live Message Area */}
                 <textarea
                   readOnly
                   value={getProcessedContent()}
-                  className="w-full h-56 bg-transparent text-sm font-sans text-foreground resize-none focus:outline-none custom-scrollbar leading-relaxed"
+                  className="w-full h-52 sm:h-60 bg-transparent text-xs sm:text-sm font-sans text-foreground resize-none focus:outline-none custom-scrollbar leading-relaxed"
                 />
 
-                <div className="pt-3 border-t border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div className="text-xs text-muted-foreground flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 text-emerald-500" />
-                    Target WhatsApp: <span className="font-bold text-foreground">{manualPhone || 'Not set (will open general WhatsApp)'}</span>
+                {/* Bottom WhatsApp Actions Bar */}
+                <div className="pt-3 border-t border-emerald-500/20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span className="truncate">
+                      {manualPhone ? `Recipient: ${manualPhone}` : 'Opens WhatsApp with message text'}
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                     <button
                       type="button"
                       onClick={handleCopyToClipboard}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs rounded-xl transition-all border border-border"
+                      className="py-3 px-4 bg-card hover:bg-muted text-foreground font-semibold text-xs sm:text-sm rounded-xl transition-all border border-border flex items-center justify-center gap-2"
                     >
                       {copied ? (
                         <>
@@ -709,7 +789,7 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
                         </>
                       ) : (
                         <>
-                          <Copy className="w-4 h-4" /> Copy Message
+                          <Copy className="w-4 h-4" /> Copy Text
                         </>
                       )}
                     </button>
@@ -717,9 +797,9 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
                     <button
                       type="button"
                       onClick={handleSendWhatsApp}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
+                      className="py-3 px-5 bg-emerald-500 hover:bg-emerald-600 text-stone-950 font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
                     >
-                      <MessageCircle className="w-4 h-4" /> Send via WhatsApp
+                      <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" /> Send via WhatsApp
                     </button>
                   </div>
                 </div>
@@ -733,13 +813,14 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
 
       {/* Modal for Creating / Editing Templates */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-card border border-border w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-border flex items-center justify-between bg-muted/30">
-              <h3 className="font-serif italic text-2xl text-foreground">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-300">
+            <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between bg-muted/30">
+              <h3 className="font-serif italic text-lg sm:text-2xl text-foreground">
                 {editingTemplateId ? 'Edit Message Template' : 'Create New Message Template'}
               </h3>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-all"
               >
@@ -747,8 +828,8 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
               </button>
             </div>
 
-            <form onSubmit={handleSaveTemplate} className="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSaveTemplate} className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
                     Template Title *
@@ -759,7 +840,7 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
                     placeholder="e.g. WiFi & Parking Details"
                     value={modalTitle}
                     onChange={(e) => setModalTitle(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                   />
                 </div>
 
@@ -770,7 +851,7 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
                   <select
                     value={modalCategory}
                     onChange={(e) => setModalCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                   >
                     {CATEGORIES.filter(c => c !== 'All').map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -784,17 +865,17 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
                   <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Message Body *
                   </label>
-                  <span className="text-[10px] text-muted-foreground">Click placeholders below to insert</span>
+                  <span className="text-[10px] text-muted-foreground">Tap tag to insert</span>
                 </div>
 
                 {/* Clickable Placeholders Toolbar */}
-                <div className="flex flex-wrap gap-1.5 mb-3 p-2.5 bg-muted/30 border border-border rounded-xl">
+                <div className="flex flex-wrap gap-1.5 mb-3 p-2 sm:p-2.5 bg-muted/30 border border-border rounded-xl max-h-28 overflow-y-auto custom-scrollbar">
                   {PLACEHOLDERS.map(p => (
                     <button
                       key={p.tag}
                       type="button"
                       onClick={() => insertPlaceholderToModal(p.tag)}
-                      className="px-2 py-1 text-[10px] font-mono bg-background border border-border rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                      className="px-2 py-1 text-[10px] sm:text-xs font-mono bg-background border border-border rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all shrink-0"
                       title={`Insert ${p.label}`}
                     >
                       + {p.tag}
@@ -804,25 +885,25 @@ export default function Messages({ settings, userProfile }: MessagesProps) {
 
                 <textarea
                   required
-                  rows={8}
+                  rows={7}
                   placeholder="Type your message template here..."
                   value={modalContent}
                   onChange={(e) => setModalContent(e.target.value)}
-                  className="w-full px-4 py-3 bg-muted/40 border border-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 leading-relaxed custom-scrollbar"
+                  className="w-full px-3.5 py-3 bg-muted/40 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 leading-relaxed custom-scrollbar"
                 />
               </div>
 
-              <div className="pt-4 border-t border-border flex items-center justify-end gap-3">
+              <div className="pt-3 border-t border-border flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 bg-muted text-muted-foreground hover:text-foreground font-semibold text-xs rounded-xl border border-border transition-all"
+                  className="px-5 py-2.5 bg-muted text-muted-foreground hover:text-foreground font-semibold text-xs sm:text-sm rounded-xl border border-border transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
+                  className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-stone-950 font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
                 >
                   Save Template
                 </button>
